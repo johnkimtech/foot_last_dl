@@ -62,7 +62,7 @@ def main():
 
     sys.path.append(str(EXP_DIR))
     libpath = f"log.regression.{args.exp_name}"
-    model = importlib.import_module(f'{libpath}.{args.model}')
+    model = importlib.import_module(f"{libpath}.{args.model}")
 
     # Set up logging
     logger = logging.getLogger("Model")
@@ -105,7 +105,9 @@ def main():
 
     try:
         # Load pretrained model if available
-        checkpoint = torch.load(str(CKPT_DIR / "best_model.pth"), map_location=torch.device(args.device))
+        checkpoint = torch.load(
+            str(CKPT_DIR / "best_model.pth"), map_location=torch.device(args.device)
+        )
         regressor.load_state_dict(checkpoint["model_state_dict"])
         log_string("Use pretrained model")
     except Exception as err:
@@ -120,8 +122,9 @@ def main():
     regressor = regressor.to(args.device).eval()
     regressor.encoder.eval()
 
-    np.set_printoptions(precision=2, suppress=True)
-    avg_mse, avg_mae = .0, .0
+    np.set_printoptions(precision=1, suppress=True)
+    avg_mse, avg_mae = 0.0, 0.0
+    real_mse, real_mae = 0.0, 0.0
     # Training loop
     len_test = len(test_dataset)
     with torch.no_grad():
@@ -133,16 +136,24 @@ def main():
 
             pred = regressor(points)
             mse, mae = criterion(pred, target, include_mae=True)
+            r_mse, r_mae = criterion(pred * scale, target * scale, include_mae=True)
             target = target.cpu().detach().numpy() * scale
             pred = pred.cpu().detach().numpy() * scale
             for t, p in zip(target, pred):
                 print(f"{t} vs {p}")
-            # mse, mae = mse.item(), mae.item()
+
             batch_size = points.shape[0]
             avg_mse += mse * batch_size / len_test
             avg_mae += mae * batch_size / len_test
+            real_mse += r_mse * batch_size / len_test
+            real_mae += r_mae * batch_size / len_test
 
-    print(f"Mean Squared Error: {avg_mse.item():.3f}, Mean Absolute Error: {avg_mae.item():.3f}")
+    print(
+        f"NORM: Mean Squared Error: {avg_mse.item():.3f}, Mean Absolute Error: {avg_mae.item():.3f}"
+    )
+    print(
+        f"REAL: Mean Squared Error: {real_mse.item():.1f}, Mean Absolute Error: {real_mae.item():.1f}"
+    )
 
 
 # Run the main function if the script is executed directly

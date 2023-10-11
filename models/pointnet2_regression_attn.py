@@ -81,7 +81,7 @@ class Predictor(nn.Module):
 
         self.fc = nn.Sequential(
             # nn.LayerNorm(in_dims),
-            # nn.Dropout(0.5),
+            nn.Dropout(0.5),
             nn.Linear(in_dims, out_dims),
             nn.ReLU(),
         )
