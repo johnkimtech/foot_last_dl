@@ -32,6 +32,12 @@ def parse_args():
         default=False,
         help="use skip_connection for mlp predictor",
     )
+    parser.add_argument(
+        "--print_config",
+        action="store_true",
+        default=False,
+        help="print model configs including architecture and hyperparams",
+    )
 
     # Parse arguments from the command line
     return parser.parse_args()
@@ -70,8 +76,9 @@ def main():
     logger.addHandler(file_handler)
 
     # Log hyperparameters
-    log_string("HYPERPARAMETERS ...")
-    log_string(args)
+    if args.print_config:
+        log_string("HYPERPARAMETERS ...")
+        log_string(args)
 
     # Create train and test datasets
     test_dataset = FootDataLoader(
