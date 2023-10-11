@@ -121,8 +121,9 @@ def main():
     regressor.encoder.eval()
 
     np.set_printoptions(precision=2, suppress=True)
-
+    avg_mse, avg_mae = .0, .0
     # Training loop
+    len_test = len(test_dataset)
     with torch.no_grad():
         for batch_id, (points, target, scale) in enumerate(testDataLoader, 0):
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
@@ -136,8 +137,12 @@ def main():
             pred = pred.cpu().detach().numpy() * scale
             for t, p in zip(target, pred):
                 print(f"{t} vs {p}")
-            mse, mae = mse.item(), mae.item()
-            print(f"{mse=}, {mae=}")
+            # mse, mae = mse.item(), mae.item()
+            batch_size = points.shape[0]
+            avg_mse += mse * batch_size / len_test
+            avg_mae += mae * batch_size / len_test
+
+    print(f"Mean Squared Error: {avg_mse.item():.3f}, Mean Absolute Error: {avg_mae.item():.3f}")
 
 
 # Run the main function if the script is executed directly
