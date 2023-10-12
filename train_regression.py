@@ -8,6 +8,7 @@ from tqdm import tqdm
 from pathlib import Path
 from torch.utils.data import DataLoader
 from data_utils.FootDataLoader import FootDataLoader
+
 # from models.pointnet2_regression import get_model, get_loss
 import importlib
 import shutil
@@ -81,7 +82,7 @@ def main():
 
     # Get the current date and time for creating experiment directories
     # timestr = str(datetime.datetime.now().strftime("%Y-%m-%d"))
-    EXP_DIR = Path("log/regression") / args.exp_name 
+    EXP_DIR = Path("log/regression") / args.exp_name
     CKPT_DIR = EXP_DIR / "checkpoints"
     LOG_DIR = EXP_DIR / "logs"
     CKPT_DIR.mkdir(exist_ok=True, parents=True)
@@ -130,7 +131,7 @@ def main():
     )
 
     # Create the regression model
-    model = importlib.import_module(f'models.{args.model}')
+    model = importlib.import_module(f"models.{args.model}")
 
     regressor = model.get_model(
         backbone_model_name=args.backbone_model,
@@ -253,6 +254,12 @@ def main():
                 "val_error": val_mse,
                 "model_state_dict": regressor.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
+                "model": args.model,
+                "num_points": args.model,
+                "backbone_model": args.backbone_model,
+                "backbone_outdims": args.backbone_outdims,
+                "out_features": args.out_features,
+                "use_skip_connection": args.use_skip_connection,
             }
             torch.save(state, savepath)
 

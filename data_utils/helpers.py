@@ -26,7 +26,8 @@ def get_points_from_triangles(triangles, flip_axis=-1):
 
 
 def stl_to_xyz_with_normals_vectorized(
-    input_stl_file, output_xyz_file, sep=",", stride=1, flip_axis=-1, permutate=False
+    input_stl_file, output_xyz_file=None, sep=",", stride=1, flip_axis=-1, permutate=False,
+    with_normals=True
 ):
     stl_mesh = mesh.Mesh.from_file(input_stl_file)
     triangles = stl_mesh.vectors.reshape(-1, 9)  # Reshape to (N, 9) array
@@ -36,23 +37,28 @@ def stl_to_xyz_with_normals_vectorized(
     points_A, points_B, points_C = get_points_from_triangles(triangles, flip_axis)
     edges1 = points_B - points_A
     edges2 = points_C - points_A
-    normals = np.cross(edges1, edges2)
-    if flip_axis > -1:
-        normals = -normals
-    norm_mags = np.linalg.norm(normals, axis=1)
-    eps = 1e-8
-    normals /= norm_mags[:, np.newaxis] + eps
+    if with_normals:
+        normals = np.cross(edges1, edges2)
+        if flip_axis > -1:
+            normals = -normals
+        norm_mags = np.linalg.norm(normals, axis=1)
+        eps = 1e-8
+        normals /= norm_mags[:, np.newaxis] + eps
 
-    # Combine vertices and normals
-    vertices_with_normals = np.hstack((points_A, normals))
+        # Combine vertices and normals
+        vertices = np.hstack((points_A, normals))
+    else:
+        vertices = points_A
 
     # permutate point cloud
     if permutate:
-        np.random.shuffle(np.arange(vertices_with_normals.shape[0]))
+        np.random.shuffle(np.arange(vertices.shape[0]))
 
     # Save to XYZ file
     # print(vertices_with_normals.shape)
-    np.savetxt(output_xyz_file, vertices_with_normals, delimiter=sep, fmt="%.8f")
+    if output_xyz_file is not None:
+        np.savetxt(output_xyz_file, vertices, delimiter=sep, fmt="%.8f")
+    return vertices
 
 
 def read_point_cloud_text(points_file, stride=1, flip_axis=-1, use_normals=True):

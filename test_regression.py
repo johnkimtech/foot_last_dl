@@ -9,6 +9,7 @@ import sys
 import argparse
 import matplotlib.pyplot as plt
 import csv
+import time
 
 
 # Parse command line arguments
@@ -122,11 +123,12 @@ def main():
     regressor = regressor.to(args.device).eval()
     regressor.encoder.eval()
 
-    np.set_printoptions(precision=1, suppress=True)
+    np.set_printoptions(precision=3, suppress=True)
     avg_mse, avg_mae = 0.0, 0.0
     real_mse, real_mae = 0.0, 0.0
     # Training loop
     len_test = len(test_dataset)
+    tic = time.perf_counter()
     with torch.no_grad():
         for batch_id, (points, target, scale) in enumerate(testDataLoader, 0):
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
@@ -136,10 +138,12 @@ def main():
 
             pred = regressor(points)
             mse, mae = criterion(pred, target, include_mae=True)
-            r_mse, r_mae = criterion(pred * scale, target * scale, include_mae=True)
-            target = target.cpu().detach().numpy() * scale
-            pred = pred.cpu().detach().numpy() * scale
-            for t, p in zip(target, pred):
+            r_mse, r_mae = criterion(pred.cpu() * scale, target.cpu() * scale, include_mae=True)
+            target = target.cpu().detach().numpy() 
+            pred = pred.cpu().detach().numpy() 
+            # for t, p in zip(target, target*scale):
+            #     print(f"{t} vs {p}")
+            for t, p in zip(target*scale, pred*scale):
                 print(f"{t} vs {p}")
 
             batch_size = points.shape[0]
@@ -149,12 +153,13 @@ def main():
             real_mae += r_mae * batch_size / len_test
 
     print(
-        f"NORM: Mean Squared Error: {avg_mse.item():.3f}, Mean Absolute Error: {avg_mae.item():.3f}"
+        f"NORM: Mean Squared Error: {avg_mse.item():.4f}, Mean Absolute Error: {avg_mae.item():.4f}"
     )
     print(
-        f"REAL: Mean Squared Error: {real_mse.item():.1f}, Mean Absolute Error: {real_mae.item():.1f}"
+        f"REAL: Mean Squared Error: {real_mse.item():.2f}, Mean Absolute Error: {real_mae.item():.2f}"
     )
-
+    toc = time.perf_counter()
+    print(f"Finished in {toc - tic:0.2f} seconds")
 
 # Run the main function if the script is executed directly
 if __name__ == "__main__":
