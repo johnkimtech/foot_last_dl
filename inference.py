@@ -123,7 +123,7 @@ def main():
     total_time = toc - tic
     results_df.reset_index(drop=True, inplace=True)
     print("INFERENCE RESULTS:")
-    print(tabulate(results_df, headers='keys', tablefmt='grid'))
+    print(tabulate(results_df, headers='keys', tablefmt='simple_grid', showindex=False))
     print(
         f"Finished in {total_time:0.2f} seconds in total, each sample takes {total_time/len(test_dataset):.3f} sec"
     )

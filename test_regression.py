@@ -143,8 +143,7 @@ def main():
             )
             target = target.cpu().detach().numpy()
             pred = pred.cpu().detach().numpy()
-            # for t, p in zip(target, target*scale):
-            #     print(f"{t} vs {p}")
+            
             for t, p in zip(target * scale, pred * scale):
                 print(f"{t} vs {p}")
 
