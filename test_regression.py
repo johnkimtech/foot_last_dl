@@ -138,12 +138,14 @@ def main():
 
             pred = regressor(points)
             mse, mae = criterion(pred, target, include_mae=True)
-            r_mse, r_mae = criterion(pred.cpu() * scale, target.cpu() * scale, include_mae=True)
-            target = target.cpu().detach().numpy() 
-            pred = pred.cpu().detach().numpy() 
+            r_mse, r_mae = criterion(
+                pred.cpu() * scale, target.cpu() * scale, include_mae=True
+            )
+            target = target.cpu().detach().numpy()
+            pred = pred.cpu().detach().numpy()
             # for t, p in zip(target, target*scale):
             #     print(f"{t} vs {p}")
-            for t, p in zip(target*scale, pred*scale):
+            for t, p in zip(target * scale, pred * scale):
                 print(f"{t} vs {p}")
 
             batch_size = points.shape[0]
@@ -159,7 +161,11 @@ def main():
         f"REAL: Mean Squared Error: {real_mse.item():.2f}, Mean Absolute Error: {real_mae.item():.2f}"
     )
     toc = time.perf_counter()
-    print(f"Finished in {toc - tic:0.2f} seconds")
+    total_time = toc - tic
+    print(
+        f"Finished in {total_time:0.2f} seconds in total, each sample takes {total_time/len(test_dataset):.3f} sec"
+    )
+
 
 # Run the main function if the script is executed directly
 if __name__ == "__main__":

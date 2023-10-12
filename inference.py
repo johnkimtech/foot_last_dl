@@ -1,15 +1,20 @@
-import torch
-import logging
-import numpy as np
-from pathlib import Path
-from torch.utils.data import DataLoader
-from data_utils.FootDataLoader import FootDataLoader
-import importlib
 import sys
-import argparse
-import matplotlib.pyplot as plt
 import csv
 import time
+import torch
+import logging
+import argparse
+import importlib
+import numpy as np
+import pandas as pd
+from pathlib import Path
+from tabulate import tabulate
+import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader
+from data_utils.FootDataLoader import FootDataLoader
+
+foot_labels_cols = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
+# foot_labels_cols = ['No', 'Length', 'Ball Circumference', 'Instep Circumference', 'Heel Circumference', 'Toe Circumference']
 
 
 # Parse command line arguments
@@ -26,6 +31,8 @@ def parse_args():
     parser.add_argument("--use_normals", type=bool, default=False)
     parser.add_argument("--out_features", type=int, default=5)
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--infer_data_csv", type=str)
+
     parser.add_argument(
         "--use_skip_connection",
         action="store_true",
@@ -35,6 +42,7 @@ def parse_args():
 
     # Parse arguments from the command line
     return parser.parse_args()
+
 
 # Main function
 def main():
@@ -74,11 +82,58 @@ def main():
         log_string("Use pretrained model")
     except Exception as err:
         # Start training from scratch if no pretrained model is available
-        log_string(f"No existing model: {err}. Can't run inference without trained weights. Exitting...")
+        log_string(
+            f"No existing model: {err}. Can't run inference without trained weights. Exitting..."
+        )
         return
-    
 
     # Move model to the specified device
     regressor = regressor.to(args.device).eval()
     regressor.encoder.eval()
 
+    # Create test datasets
+    test_dataset = FootDataLoader(
+        num_points=args.num_points,
+        use_normals=args.use_normals,
+        split="infer",
+        infer_data_csv=args.infer_data_csv,
+    )
+    # Create data loaders
+    testDataLoader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10
+    )
+
+    np.set_printoptions(precision=3, suppress=True)
+    tic = time.perf_counter()
+
+    # Set display options to show all rows and columns
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 1000)
+    pd.set_option('display.colheader_justify', 'center')
+    pd.set_option('display.precision', 3)
+
+    results_df = pd.DataFrame(columns=foot_labels_cols)
+    with torch.no_grad():
+        for batch_id, (points, scale, foot_ids) in enumerate(testDataLoader, 0):
+            points = torch.tensor(points, dtype=torch.float32, device=args.device)
+            scale = scale.numpy().reshape(scale.shape[0], 1)
+
+            pred = regressor(points)
+            pred = pred.cpu().detach().numpy() * scale
+            new_df = pd.DataFrame(np.hstack((np.array(foot_ids).reshape(-1,1), np.round(pred, 3))), columns=foot_labels_cols)
+            results_df = pd.concat(
+                (results_df, new_df)
+            )
+
+    toc = time.perf_counter()
+    total_time = toc - tic
+    results_df.reset_index(drop=True, inplace=True)
+    print(tabulate(results_df, headers='keys', tablefmt='grid'))
+    print(
+        f"Finished in {total_time:0.2f} seconds in total, each sample takes {total_time/len(test_dataset):.3f} sec"
+    )
+
+
+if __name__ == "__main__":
+    main()
