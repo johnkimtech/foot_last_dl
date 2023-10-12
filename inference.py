@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument("--out_features", type=int, default=5)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--infer_data_csv", type=str)
+    parser.add_argument("--output_csv_path", type=str, default=None)
 
     parser.add_argument(
         "--use_skip_connection",
@@ -103,15 +104,7 @@ def main():
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10
     )
 
-    np.set_printoptions(precision=3, suppress=True)
     tic = time.perf_counter()
-
-    # Set display options to show all rows and columns
-    pd.set_option('display.max_rows', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', 1000)
-    pd.set_option('display.colheader_justify', 'center')
-    pd.set_option('display.precision', 3)
 
     results_df = pd.DataFrame(columns=foot_labels_cols)
     with torch.no_grad():
@@ -129,10 +122,13 @@ def main():
     toc = time.perf_counter()
     total_time = toc - tic
     results_df.reset_index(drop=True, inplace=True)
+    print("INFERENCE RESULTS:")
     print(tabulate(results_df, headers='keys', tablefmt='grid'))
     print(
         f"Finished in {total_time:0.2f} seconds in total, each sample takes {total_time/len(test_dataset):.3f} sec"
     )
+    if args.output_csv_path:
+        results_df.to_csv(args.output_csv_path, index=False)
 
 
 if __name__ == "__main__":
