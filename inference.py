@@ -1,5 +1,5 @@
 import sys
-import csv
+import os
 import time
 import torch
 import logging
@@ -7,9 +7,9 @@ import argparse
 import importlib
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from pathlib import Path
 from tabulate import tabulate
-import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from data_utils.FootDataLoader import FootDataLoader
 
@@ -108,27 +108,32 @@ def main():
 
     results_df = pd.DataFrame(columns=foot_labels_cols)
     with torch.no_grad():
-        for batch_id, (points, scale, foot_ids) in enumerate(testDataLoader, 0):
+        for batch_id, (points, scale, foot_ids) in tqdm(
+            enumerate(testDataLoader, 0), total=len(testDataLoader), smoothing=0.8
+        ):
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
             scale = scale.numpy().reshape(scale.shape[0], 1)
 
             pred = regressor(points)
             pred = pred.cpu().detach().numpy() * scale
-            new_df = pd.DataFrame(np.hstack((np.array(foot_ids).reshape(-1,1), np.round(pred, 3))), columns=foot_labels_cols)
-            results_df = pd.concat(
-                (results_df, new_df)
+            new_df = pd.DataFrame(
+                np.hstack((np.array(foot_ids).reshape(-1, 1), np.round(pred, 3))),
+                columns=foot_labels_cols,
             )
+            results_df = pd.concat((results_df, new_df))
 
     toc = time.perf_counter()
     total_time = toc - tic
     results_df.reset_index(drop=True, inplace=True)
+    print('*'*20)
     print("INFERENCE RESULTS:")
-    print(tabulate(results_df, headers='keys', tablefmt='simple_grid', showindex=False))
+    print(tabulate(results_df, headers="keys", tablefmt="simple_grid", showindex=False))
     print(
         f"Finished in {total_time:0.2f} seconds in total, each sample takes {total_time/len(test_dataset):.3f} sec"
     )
     if args.output_csv_path:
         results_df.to_csv(args.output_csv_path, index=False)
+        print("Results are saved in:", os.path.abspath(args.output_csv_path))
 
 
 if __name__ == "__main__":
