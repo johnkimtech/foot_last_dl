@@ -19,7 +19,7 @@ def parse_args():
     # Define command line arguments
     parser.add_argument("--num_points", type=int, default=6000)
     parser.add_argument("--model", type=str)
-    parser.add_argument("--root_dir", type=str, default="data/3D_30/txt/Foot")
+    parser.add_argument("--dataset_dir", type=str, default="data/3D_30/txt/Foot")
     parser.add_argument("--exp_name", type=str, default="model_mlp")
     parser.add_argument("--backbone_model", type=str, default="pointnet2_cls_ssg")
     parser.add_argument("--backbone_outdims", type=int, default=256)
@@ -83,7 +83,7 @@ def main():
 
     # Create train and test datasets
     test_dataset = FootDataLoader(
-        args.root_dir, args.num_points, args.use_normals, "test"
+        args.dataset_dir, args.num_points, args.use_normals, "test"
     )
     log_string(f"DATASET: {len(test_dataset)=}")
 

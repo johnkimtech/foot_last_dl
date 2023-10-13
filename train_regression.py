@@ -24,7 +24,7 @@ def parse_args():
 
     # Define command line arguments
     parser.add_argument("--num_points", type=int, default=6000)
-    parser.add_argument("--root_dir", type=str, default="data/3D_30/txt/Foot")
+    parser.add_argument("--dataset_dir", type=str, default="data/3D_30/txt/Foot")
     parser.add_argument("--model", type=str)
     parser.add_argument("--exp_name", type=str, default="model_mlp")
     parser.add_argument("--backbone_model", type=str, default="pointnet2_cls_ssg")
@@ -34,25 +34,25 @@ def parse_args():
         default="log/classification/pointnet2_cls_ssg_nonnormal_42c_allleft_new/checkpoints/best_model.pth",
     )
     parser.add_argument(
-        "--backbone_frozen",
+        "--finetune",
         action="store_true",
         default=False,
-        help="Freeze encoder weights",
+        help="Train pretrained weights of encoder",
     )
     parser.add_argument("--backbone_outdims", type=int, default=256)
-    parser.add_argument("--use_normals", type=bool, default=False)
     parser.add_argument("--out_features", type=int, default=5)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--n_epochs", type=int, default=10)
-    parser.add_argument(
-        "--use_adam_optimizer",
-        action="store_true",
-        default=False,
-        help="use adam optimizer",
-    )
+    parser.add_argument("--optim", type=str, default="adam", choices=["adam", "sgd"])
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument(
+        "--use_normals",
+        action="store_true",
+        default=False,
+        help="use normals input for point cloud data",
+    )
     parser.add_argument(
         "--use_lr_scheduler",
         action="store_true",
@@ -81,7 +81,6 @@ def main():
     args = parse_args()
 
     # Get the current date and time for creating experiment directories
-    # timestr = str(datetime.datetime.now().strftime("%Y-%m-%d"))
     EXP_DIR = Path("log/regression") / args.exp_name
     CKPT_DIR = EXP_DIR / "checkpoints"
     LOG_DIR = EXP_DIR / "logs"
@@ -111,10 +110,10 @@ def main():
 
     # Create train and test datasets
     train_dataset = FootDataLoader(
-        args.root_dir, args.num_points, args.use_normals, "train"
+        args.dataset_dir, args.num_points, args.use_normals, "train"
     )
     test_dataset = FootDataLoader(
-        args.root_dir, args.num_points, args.use_normals, "test"
+        args.dataset_dir, args.num_points, args.use_normals, "test"
     )
     log_string(f"DATASET: {len(train_dataset)=}; {len(test_dataset)=}")
 
@@ -136,7 +135,7 @@ def main():
     regressor = model.get_model(
         backbone_model_name=args.backbone_model,
         backbone_pretrained_path=args.backbone_ckpt,
-        backbone_frozen=args.backbone_frozen,
+        backbone_frozen=not args.finetune,
         backbone_outdims=args.backbone_outdims,
         num_class=42,
         normal_channel=args.use_normals,
@@ -160,9 +159,9 @@ def main():
     # Define loss function, optimizer, and learning rate scheduler
     criterion = model.get_loss()
     model_params = (
-        regressor.mlp.parameters() if args.backbone_frozen else regressor.parameters()
+        regressor.parameters() if args.finetune else regressor.mlp.parameters()
     )
-    if args.use_adam_optimizer:
+    if args.optim == "adam":
         optimizer = torch.optim.Adam(
             # regressor.parameters(),
             model_params,
@@ -172,7 +171,7 @@ def main():
             weight_decay=args.weight_decay,
         )
     else:
-        optimizer = torch.optim.SGD(model_params, lr=0.01, momentum=0.9)
+        optimizer = torch.optim.SGD(model_params, lr=args.lr, momentum=0.9)
 
     if args.use_lr_scheduler:
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.7)
