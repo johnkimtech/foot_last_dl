@@ -77,10 +77,13 @@ class Predictor(nn.Module):
     def __init__(self, in_dims, out_dims, use_skip_connection=False):
         super(Predictor, self).__init__()
         self.use_skip_connection = use_skip_connection
-        self.attn = SimpleAttentionModule(in_dims, in_dims * 4, in_dims)
+        self.attn = nn.Sequential(
+            nn.LayerNorm(in_dims),
+            SimpleAttentionModule(in_dims, in_dims * 4, in_dims)
+        )
 
         self.fc = nn.Sequential(
-            # nn.LayerNorm(in_dims),
+            nn.LayerNorm(in_dims),
             nn.Dropout(0.5),
             nn.Linear(in_dims, out_dims),
             nn.ReLU(),

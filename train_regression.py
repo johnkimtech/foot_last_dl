@@ -44,6 +44,12 @@ def parse_args():
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--n_epochs", type=int, default=10)
+    parser.add_argument(
+        "--log_interval",
+        type=int,
+        default=10,
+        help="#epochs to log and graph training history",
+    )
     parser.add_argument("--optim", type=str, default="adam", choices=["adam", "sgd"])
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
@@ -259,15 +265,29 @@ def main():
                 "backbone_outdims": args.backbone_outdims,
                 "out_features": args.out_features,
                 "use_skip_connection": args.use_skip_connection,
-                "use_normals": args.use_normals
+                "use_normals": args.use_normals,
             }
             torch.save(state, savepath)
 
         log_string("_" * 15)
+        if (global_epoch + 1) % args.log_interval == 0:
+            # Save training history as a CSV file
+            save_history_csv(start_epoch, train_errors, val_errors, LOG_DIR)
+            # Plot and save the training history graph
+            plot_history(start_epoch, train_errors, val_errors, LOG_DIR)
         global_epoch += 1
 
+    ## END OF TRAINING logging and graphing
+
     # Save training history as a CSV file
-    history_file_path = str(LOG_DIR) + "/training_history.csv"
+    save_history_csv(start_epoch, train_errors, val_errors, LOG_DIR)
+    # Plot and save the training history graph
+    plot_history(start_epoch, train_errors, val_errors, LOG_DIR)
+    log_string("End of training...")
+
+
+def save_history_csv(start_epoch, train_errors, val_errors, save_dir):
+    history_file_path = os.path.join(save_dir, "training_history.csv")
     with open(history_file_path, mode="w") as history_file:
         history_writer = csv.writer(history_file)
         history_writer.writerow(["Epoch", "Train Error", "Validation Error"])
@@ -276,22 +296,24 @@ def main():
         ):
             history_writer.writerow([epoch + 1, train_mse, val_mse])
 
-    # Plot and save the training history graph
+
+def plot_history(start_epoch, train_errors, val_errors, save_dir):
     plt.figure()
     plt.plot(
-        range(start_epoch + 1, global_epoch + 1), train_errors, label="Train Error"
+        range(start_epoch, start_epoch + len(train_errors)),
+        train_errors,
+        label="Train Error",
     )
     plt.plot(
-        range(start_epoch + 1, global_epoch + 1), val_errors, label="Validation Error"
+        range(start_epoch, start_epoch + len(val_errors)),
+        val_errors,
+        label="Validation Error",
     )
     plt.xlabel("Epoch")
-    plt.ylabel(f"Error (best={best_val_error:.4f})")
+    plt.ylabel(f"Error (best={min(val_errors):.4f})")
     plt.legend()
     plt.title("Training History")
-    plt.savefig(str(LOG_DIR) + "/training_history.png")
-    # plt.show()
-
-    log_string("End of training...")
+    plt.savefig(os.path.join(save_dir, "training_history.png"))
 
 
 # Run the main function if the script is executed directly
