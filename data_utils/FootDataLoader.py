@@ -22,7 +22,7 @@ class FootDataLoader(Dataset):
         num_points: int = 6000,
         use_normals: bool = False,
         split="train",
-        infer_data_csv: str = None,  # CSV files containing 
+        infer_data_csv: str = None,  # CSV files containing
     ):
         self.npoints = num_points
         self.use_normals = use_normals
@@ -35,7 +35,8 @@ class FootDataLoader(Dataset):
             assert (
                 root is not None
             ), "Root data folder must be provided in training or testing mode"
-            self.df = pd.read_csv(f"{root}/{split}.csv")
+            data_path = os.path.join(root, f"{split}.csv")
+            self.df = pd.read_csv(data_path)
         else:
             self.df = pd.read_csv(infer_data_csv)
 
@@ -62,7 +63,7 @@ class FootDataLoader(Dataset):
             points = shift_point_cloud(points)
 
         if self.split == "infer":
-            return points, scale, foot['No.']
+            return points, scale, foot["No."]
 
         labels = foot[foot_labels_cols].to_numpy().astype(float)
         labels_normalized = labels / scale

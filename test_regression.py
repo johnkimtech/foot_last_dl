@@ -17,22 +17,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Your program description here.")
 
     # Define command line arguments
-    parser.add_argument("--num_points", type=int, default=6000)
-    parser.add_argument("--model", type=str)
-    parser.add_argument("--dataset_dir", type=str, default="data/3D_30/txt/Foot")
-    parser.add_argument("--exp_name", type=str, default="model_mlp")
-    parser.add_argument("--backbone_model", type=str, default="pointnet2_cls_ssg")
-    parser.add_argument("--backbone_outdims", type=int, default=256)
-    parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--use_normals", type=bool, default=False)
-    parser.add_argument("--out_features", type=int, default=5)
-    parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument(
-        "--use_skip_connection",
-        action="store_true",
-        default=False,
-        help="use skip_connection for mlp predictor",
+        "--dataset_dir", type=str, default="data/3D_All_Foot/oct12"
     )
+    parser.add_argument("--exp_name", type=str, required=True)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument(
         "--print_config",
         action="store_true",
@@ -61,10 +51,6 @@ def main():
     CKPT_DIR.mkdir(exist_ok=True, parents=True)
     LOG_DIR.mkdir(exist_ok=True, parents=True)
 
-    sys.path.append(str(EXP_DIR))
-    libpath = f"log.regression.{args.exp_name}"
-    model = importlib.import_module(f"{libpath}.{args.model}")
-
     # Set up logging
     logger = logging.getLogger("Model")
     logger.setLevel(logging.INFO)
@@ -76,6 +62,21 @@ def main():
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
+    try:
+        # Load pretrained model if available
+        checkpoint = torch.load(
+            str(CKPT_DIR / "best_model.pth"), map_location=torch.device(args.device)
+        )
+        log_string("Using pretrained model")
+    except Exception as err:
+        # Start training from scratch if no pretrained model is available
+        log_string(f"No existing model: {err}")
+        return
+
+    sys.path.append(str(EXP_DIR))
+    libpath = f"log.regression.{args.exp_name}"
+    model = importlib.import_module(checkpoint["model"], libpath)
+
     # Log hyperparameters
     if args.print_config:
         log_string("HYPERPARAMETERS ...")
@@ -83,7 +84,7 @@ def main():
 
     # Create train and test datasets
     test_dataset = FootDataLoader(
-        args.dataset_dir, args.num_points, args.use_normals, "test"
+        args.dataset_dir, checkpoint["num_points"], checkpoint["use_normals"], "test"
     )
     log_string(f"DATASET: {len(test_dataset)=}")
 
@@ -94,27 +95,16 @@ def main():
 
     # Create the regression model
     regressor = model.get_model(
-        backbone_model_name=f"{libpath}.{args.backbone_model}",
+        backbone_model_name=checkpoint["backbone_model"],
         backbone_pretrained_path=None,
         backbone_frozen=True,
-        backbone_outdims=args.backbone_outdims,
+        backbone_outdims=checkpoint["backbone_outdims"],
         num_class=42,
-        normal_channel=args.use_normals,
-        n_out_dims=args.out_features,
-        use_skip_connection=args.use_skip_connection,
+        normal_channel=checkpoint["use_normals"],
+        n_out_dims=checkpoint["out_features"],
+        use_skip_connection=checkpoint["use_skip_connection"],
     )
-
-    try:
-        # Load pretrained model if available
-        checkpoint = torch.load(
-            str(CKPT_DIR / "best_model.pth"), map_location=torch.device(args.device)
-        )
-        regressor.load_state_dict(checkpoint["model_state_dict"])
-        log_string("Use pretrained model")
-    except Exception as err:
-        # Start training from scratch if no pretrained model is available
-        log_string(f"No existing model: {err}")
-        return
+    regressor.load_state_dict(checkpoint["model_state_dict"])
 
     # Define loss function, optimizer, and learning rate scheduler
     criterion = model.get_loss()
@@ -133,7 +123,7 @@ def main():
         for batch_id, (points, target, scale) in enumerate(testDataLoader, 0):
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
             target = torch.tensor(target, dtype=torch.float32, device=args.device)
-            target = target[:, : args.out_features]
+            target = target[:, : checkpoint["out_features"]]
             scale = scale.numpy().reshape(scale.shape[0], 1)
 
             pred = regressor(points)
@@ -143,7 +133,7 @@ def main():
             )
             target = target.cpu().detach().numpy()
             pred = pred.cpu().detach().numpy()
-            
+
             for t, p in zip(target * scale, pred * scale):
                 print(f"{t} vs {p}")
 

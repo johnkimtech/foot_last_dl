@@ -254,11 +254,12 @@ def main():
                 "model_state_dict": regressor.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "model": args.model,
-                "num_points": args.model,
+                "num_points": args.num_points,
                 "backbone_model": args.backbone_model,
                 "backbone_outdims": args.backbone_outdims,
                 "out_features": args.out_features,
                 "use_skip_connection": args.use_skip_connection,
+                "use_normals": args.use_normals
             }
             torch.save(state, savepath)
 
