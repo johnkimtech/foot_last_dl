@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 foot_labels_cols = ["발 길이 ", "발볼 둘레 ", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
 
 
-class FootDataLoader(Dataset):
+class FootDataset(Dataset):
     def __init__(
         self,
         root: str = None,

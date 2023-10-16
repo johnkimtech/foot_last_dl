@@ -4,37 +4,52 @@ from inference import inference
 from collections import namedtuple
 from gui_utils import render_stl, make_csv_infer
 
-def predict(file, foot):
-    if file and foot:
+
+def predict(model, input_file, foot):
+    if model and input_file and foot:
         Setting = namedtuple(
-            "Setting", ("exp_name", "infer_data_csv", "device", "batch_size", "output_csv_path")
+            "Setting",
+            ("exp_name", "infer_data_csv", "device", "batch_size", "output_csv_path"),
         )
         args = Setting(
-            exp_name="attn_ln",
-            infer_data_csv=make_csv_infer(file.name, foot),
+            exp_name=model,
+            infer_data_csv=make_csv_infer(input_file.name, foot),
             device="cpu",
             batch_size=1,
-            output_csv_path=None
+            output_csv_path=None,
         )
+        print("test")
         result_df = inference(args)
-        render_img = render_stl(file) if file.name.endswith('stl') else None
+        render_img = render_stl(input_file)  # if file.name.endswith("stl") else None
         return render_img, result_df.iloc[:, 1:]
+        # return render_img, None
     else:
         return None, None
 
 
 # Define the Gradio interface
-demo = gr.Interface(
-    fn=predict,
-    inputs=[
-        gr.File(label="Upload STL File of a Foot"),
-        gr.Radio(label="Left/Right Foot?", choices=["Left", "Right"], value="Left"),
-    ],
-    outputs=[
-        gr.Image(label="3D Render of the STL input file"),
-        gr.DataFrame(label="Estimated foot parameters"),
-    ],  # Display the rendered image
-    live=True,
-)
+with gr.Blocks(title="Foot Parameter Regression", live=False) as demo:
+    # inputs
+    with gr.Row():
+        with gr.Column(scale=1):
+            model = gr.Radio(
+                label="Model", choices=["attn_ln", "attn_ln_oct_16"], value="attn_ln"
+            )
+            input_file = gr.File(label="Upload STL File of a Foot")
+            foot = gr.Radio(
+                label="Left/Right Foot?", choices=["Left", "Right"], value="Left"
+            )
 
-demo.launch(server_name="0.0.0.0", server_port=7860)
+            btn_submit = gr.Button("Predict")
+
+        # outputs
+        with gr.Column(scale=2):
+            img = gr.Image(label="3D Render of the STL input file")
+            result = gr.DataFrame(label="Estimated foot parameters")
+
+    # event handler
+    btn_submit.click(predict, inputs=[model, input_file, foot], outputs=[img, result])
+
+
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0", server_port=7860)

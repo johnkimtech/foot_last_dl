@@ -1,5 +1,4 @@
 FROM  nvcr.io/nvidia/pytorch:23.09-py3 AS footlastdl_build
-
 WORKDIR /app
 RUN apt update
 RUN apt-get install -y libx11-6 libgl-dev

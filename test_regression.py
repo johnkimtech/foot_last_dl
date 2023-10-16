@@ -1,15 +1,13 @@
 import torch
+import sys
+import time
 import logging
+import argparse
+import importlib
 import numpy as np
 from pathlib import Path
 from torch.utils.data import DataLoader
-from data_utils.FootDataLoader import FootDataLoader
-import importlib
-import sys
-import argparse
-import matplotlib.pyplot as plt
-import csv
-import time
+from data_utils.FootDataset import FootDataset
 
 np.set_printoptions(precision=1, suppress=True)
 
@@ -83,7 +81,7 @@ def main():
         log_string(args)
 
     # Create train and test datasets
-    test_dataset = FootDataLoader(
+    test_dataset = FootDataset(
         args.dataset_dir, checkpoint["num_points"], checkpoint["use_normals"], "test"
     )
     log_string(f"DATASET: {len(test_dataset)=}")

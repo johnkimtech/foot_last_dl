@@ -11,7 +11,7 @@ from tqdm import tqdm
 from pathlib import Path
 from tabulate import tabulate
 from torch.utils.data import DataLoader
-from data_utils.FootDataLoader import FootDataLoader
+from data_utils.FootDataset import FootDataset
 
 foot_labels_cols = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
 # foot_labels_cols = ['No', 'Length', 'Ball Circumference', 'Instep Circumference', 'Heel Circumference', 'Toe Circumference']
@@ -62,7 +62,7 @@ def inference(args):
         checkpoint = torch.load(
             str(CKPT_DIR / "best_model.pth"), map_location=torch.device(args.device)
         )
-        log_string("Using pretrained model")
+        log_string(f"Using pretrained model: {str(CKPT_DIR)}")
     except Exception as err:
         # Start training from scratch if no pretrained model is available
         log_string(f"No existing model: {err}")
@@ -72,7 +72,6 @@ def inference(args):
     libpath = f"log.regression.{args.exp_name}"
     model = importlib.import_module(checkpoint["model"], libpath)
 
-    log_string("Loading model...")
     # Create the regression model
     
     regressor = model.get_model(
@@ -92,7 +91,7 @@ def inference(args):
     regressor.encoder.eval()
 
     # Create test datasets
-    test_dataset = FootDataLoader(
+    test_dataset = FootDataset(
         num_points=checkpoint["num_points"],
         use_normals=checkpoint["use_normals"],
         split="infer",
@@ -102,6 +101,7 @@ def inference(args):
     testDataLoader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10
     )
+    log_string("Running Inference...")
 
     tic = time.perf_counter()
 

@@ -46,32 +46,51 @@ def render_stl(file):
     if file is None:
         return None
 
-    # Load STL file using the provided file name
-    mesh = o3d.io.read_triangle_mesh(file.name)
+    if file.name.lower().endswith('.stl'):
+        # Load STL file using the provided file name
+        mesh = o3d.io.read_triangle_mesh(file.name)
 
-    # Check if the loaded mesh is empty
-    if len(mesh.vertices) == 0 or len(mesh.triangles) == 0:
-        return None
+        # Check if the loaded mesh is empty
+        if len(mesh.vertices) == 0 or len(mesh.triangles) == 0:
+            return None
 
-    # Convert vertices and triangles to NumPy arrays
-    vertices = np.asarray(mesh.vertices)
-    triangles = np.asarray(mesh.triangles)
+        # Convert vertices and triangles to NumPy arrays
+        vertices = np.asarray(mesh.vertices)
+        triangles = np.asarray(mesh.triangles)
 
-    # Create a Plotly figure
-    fig = go.Figure()
+        # Create a Plotly figure
+        fig = go.Figure()
 
-    # Add the 3D mesh to the figure
-    fig.add_trace(
-        go.Mesh3d(
-            x=vertices[:, 0],
-            y=vertices[:, 1],
-            z=vertices[:, 2],
-            i=triangles[:, 0],
-            j=triangles[:, 1],
-            k=triangles[:, 2],
-            opacity=0.5,
+        # Add the 3D mesh to the figure
+        fig.add_trace(
+            go.Mesh3d(
+                x=vertices[:, 0],
+                y=vertices[:, 1],
+                z=vertices[:, 2],
+                i=triangles[:, 0],
+                j=triangles[:, 1],
+                k=triangles[:, 2],
+                opacity=0.5,
+            )
         )
-    )
+    elif file.name.lower().endswith('.txt'):
+        points = np.loadtxt(file.name, delimiter=",")[::2, :3].copy()
+        # Convert points to a NumPy array
+        points_array = np.asarray(points)
+
+        # Create a Plotly figure for the 3D scatter plot
+        fig = go.Figure()
+
+        # Add the 3D scatter plot to the figure
+        fig.add_trace(
+            go.Scatter3d(
+                x=points_array[:, 0],
+                y=points_array[:, 1],
+                z=points_array[:, 2],
+                mode='markers',
+                marker=dict(size=1),
+            )
+        )
 
     # Convert the Plotly figure to an image
     image_bytes = fig.to_image(format="png")

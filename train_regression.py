@@ -7,9 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 from torch.utils.data import DataLoader
-from data_utils.FootDataLoader import FootDataLoader
+from data_utils.FootDataset import FootDataset
 
-# from models.pointnet2_regression import get_model, get_loss
 import importlib
 import shutil
 import argparse
@@ -115,10 +114,10 @@ def main():
     log_string(args)
 
     # Create train and test datasets
-    train_dataset = FootDataLoader(
+    train_dataset = FootDataset(
         args.dataset_dir, args.num_points, args.use_normals, "train"
     )
-    test_dataset = FootDataLoader(
+    test_dataset = FootDataset(
         args.dataset_dir, args.num_points, args.use_normals, "test"
     )
     log_string(f"DATASET: {len(train_dataset)=}; {len(test_dataset)=}")
