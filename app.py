@@ -18,11 +18,9 @@ def predict(model, input_file, foot):
             batch_size=1,
             output_csv_path=None,
         )
-        print("test")
-        result_df = inference(args)
-        render_img = render_stl(input_file)  # if file.name.endswith("stl") else None
-        return render_img, result_df.iloc[:, 1:]
-        # return render_img, None
+        result_df = inference(args).iloc[:, 1:]
+        render_img = render_stl(input_file)
+        return render_img, result_df
     else:
         return None, None
 
@@ -33,7 +31,7 @@ with gr.Blocks(title="Foot Parameter Regression", live=False) as demo:
     with gr.Row():
         with gr.Column(scale=1):
             model = gr.Radio(
-                label="Model", choices=["attn_ln", "attn_ln_oct_16"], value="attn_ln"
+                label="Model", choices=["attn_ln", "attn_ln_oct_16"], value="attn_ln_oct_16", visible=False
             )
             input_file = gr.File(label="Upload STL File of a Foot")
             foot = gr.Radio(

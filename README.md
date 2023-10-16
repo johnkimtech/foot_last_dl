@@ -4,7 +4,9 @@ You can build a new docker image before running:
 $: docker build --pull --rm -f "Dockerfile" -t footlastdl:latest "." 
 ```
 Alternatively, you can use prebuilt image with:
-
+```console
+$: docker pull nqhoang/footlastdl:latest
+```
 
 ## Running
 
@@ -49,7 +51,7 @@ $: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log foo
 ### Run as Inference (without ground truths)
 **Requirements:** Same as testing
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python inference.py --exp_name attn_ln --dataset_dir "data/3D_All_Foot/oct13new/"
+$: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python inference.py --exp_name attn_ln --infer_data_csv "data/3D_All_Foot/oct13new/infer.csv" --device cpu --batch_size 4
 ```
 
 ### Run as Web demo (Gradio)
