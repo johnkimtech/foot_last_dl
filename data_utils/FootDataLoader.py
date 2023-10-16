@@ -1,14 +1,13 @@
 import os
 import warnings
-import pickle
 import pandas as pd
-import torch
 from torch.utils.data import Dataset
 from data_utils.helpers import (
     read_point_cloud_text,
     random_point_dropout,
     shift_point_cloud,
     pc_normalize,
+    stl_to_xyz_with_normals_vectorized,
 )
 
 warnings.filterwarnings("ignore")
@@ -48,9 +47,23 @@ class FootDataLoader(Dataset):
 
         pc_path = foot["3D"]
 
-        points = read_point_cloud_text(
-            pc_path, flip_axis=1 if foot["Foot"] == "R" else -1
-        )
+        _, pc_ext = os.path.splitext(pc_path)
+
+        if pc_ext.lower() == ".txt":
+            points = read_point_cloud_text(
+                pc_path, flip_axis=1 if foot["Foot"] == "R" else -1
+            )
+        elif pc_ext.lower() == ".stl":
+            # Only use STL in inference / testing, not in TRAINING
+            points = stl_to_xyz_with_normals_vectorized(
+                pc_path,
+                stride=10,
+                flip_axis=1 if foot["Foot"] == "R" else -1,
+                with_normals=self.use_normals,
+                permutate=True,
+            )
+        else:
+            raise (f"Unsupported data file extension: {pc_ext}")
 
         dims = 6 if self.use_normals else 3
         points = points[: self.npoints, :dims].astype(float)

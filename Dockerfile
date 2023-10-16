@@ -9,4 +9,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM footlastdl_build
 WORKDIR /app
 COPY . /app
-CMD ["python", "test_docker.py"]
+EXPOSE 7860
+CMD ["python", "app.py"]

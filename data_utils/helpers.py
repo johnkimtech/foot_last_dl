@@ -55,7 +55,6 @@ def stl_to_xyz_with_normals_vectorized(
         np.random.shuffle(np.arange(vertices.shape[0]))
 
     # Save to XYZ file
-    # print(vertices_with_normals.shape)
     if output_xyz_file is not None:
         np.savetxt(output_xyz_file, vertices, delimiter=sep, fmt="%.8f")
     return vertices

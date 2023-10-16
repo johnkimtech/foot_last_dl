@@ -22,9 +22,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Your program description here.")
 
     # Define command line arguments
-    parser.add_argument(
-        "--dataset_dir", type=str, default="data/3D_All_Foot/oct12"
-    )
     parser.add_argument("--exp_name", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--device", type=str, default="cpu")
@@ -36,14 +33,11 @@ def parse_args():
 
 
 # Main function
-def main():
+def inference(args):
     # Define a function to log strings to a file and print them
     def log_string(str):
         logger.info(str)
         print(str)
-
-    # Parse command line arguments
-    args = parse_args()
 
     # Get the current date and time for creating experiment directories
     EXP_DIR = Path("log/regression") / args.exp_name
@@ -140,6 +134,10 @@ def main():
         results_df.to_csv(args.output_csv_path, index=False)
         print("Results are saved in:", os.path.abspath(args.output_csv_path))
 
+    return results_df
+
 
 if __name__ == "__main__":
-    main()
+    # Parse command line arguments
+    args = parse_args()
+    inference(args)
