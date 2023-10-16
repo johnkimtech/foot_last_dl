@@ -62,6 +62,7 @@ class FootDataLoader(Dataset):
                 with_normals=self.use_normals,
                 permutate=True,
             )
+            # print('Converted', points.shape)
         else:
             raise (f"Unsupported data file extension: {pc_ext}")
 

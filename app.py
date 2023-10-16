@@ -12,12 +12,13 @@ def predict(file, foot):
         args = Setting(
             exp_name="attn_ln",
             infer_data_csv=make_csv_infer(file.name, foot),
-            device="cuda",
+            device="cpu",
             batch_size=1,
             output_csv_path=None
         )
         result_df = inference(args)
-        return render_stl(file), result_df.iloc[:, 2:]
+        render_img = render_stl(file) if file.name.endswith('stl') else None
+        return render_img, result_df.iloc[:, 1:]
     else:
         return None, None
 
