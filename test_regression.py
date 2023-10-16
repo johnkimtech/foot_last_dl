@@ -11,15 +11,15 @@ import matplotlib.pyplot as plt
 import csv
 import time
 
+np.set_printoptions(precision=1, suppress=True)
+
 
 # Parse command line arguments
 def parse_args():
     parser = argparse.ArgumentParser(description="Your program description here.")
 
     # Define command line arguments
-    parser.add_argument(
-        "--dataset_dir", type=str, default="data/3D_All_Foot/oct12"
-    )
+    parser.add_argument("--dataset_dir", type=str, default="data/3D_All_Foot/oct12")
     parser.add_argument("--exp_name", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--device", type=str, default="cpu")
@@ -113,7 +113,6 @@ def main():
     regressor = regressor.to(args.device).eval()
     regressor.encoder.eval()
 
-    np.set_printoptions(precision=3, suppress=True)
     avg_mse, avg_mae = 0.0, 0.0
     real_mse, real_mae = 0.0, 0.0
     # Training loop

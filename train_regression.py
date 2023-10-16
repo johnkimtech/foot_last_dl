@@ -148,7 +148,7 @@ def main():
         n_out_dims=args.out_features,
         use_skip_connection=args.use_skip_connection,
     )
-
+    checkpoint = None
     try:
         # Load pretrained model if available
         checkpoint = torch.load(str(CKPT_DIR / "best_model.pth"))
@@ -162,6 +162,14 @@ def main():
         best_val_error = np.inf
         start_epoch = 0
 
+    if checkpoint:
+        try:
+            optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            log_string("Loaded optimizer previous state for training")
+        except Exception as err:
+            log_string(
+                "Failed to load optimizer state, it could be for a different optimizer."
+            )
     # Define loss function, optimizer, and learning rate scheduler
     criterion = model.get_loss()
     model_params = (
