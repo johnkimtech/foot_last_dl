@@ -1,3 +1,4 @@
+import argparse
 import gradio as gr
 from pathlib import Path
 from inference import inference
@@ -31,7 +32,10 @@ with gr.Blocks(title="Foot Parameter Regression", live=False) as demo:
     with gr.Row():
         with gr.Column(scale=1):
             model = gr.Radio(
-                label="Model", choices=["attn_ln", "attn_ln_oct_16"], value="attn_ln_oct_16", visible=False
+                label="Model",
+                choices=["attn_ln", "attn_ln_oct_16"],
+                value="attn_ln_oct_16",
+                visible=False,
             )
             input_file = gr.File(label="Upload STL File of a Foot")
             foot = gr.Radio(
@@ -49,5 +53,20 @@ with gr.Blocks(title="Foot Parameter Regression", live=False) as demo:
     btn_submit.click(predict, inputs=[model, input_file, foot], outputs=[img, result])
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Your program description here.")
+
+    # Define command line arguments
+    parser.add_argument("--ip", type=str, default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=7860)
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        default=False,
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    args = parse_args()
+    demo.launch(server_name=args.ip, server_port=args.port, share=args.public)
