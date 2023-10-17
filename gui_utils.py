@@ -41,7 +41,7 @@ def random_file_path(file_ext):
     return file_path
 
 
-def render_stl(file):
+def render_3d(file):
     # Check if the file is None
     if file is None:
         return None

@@ -3,7 +3,7 @@ import gradio as gr
 from pathlib import Path
 from inference import inference
 from collections import namedtuple
-from gui_utils import render_stl, make_csv_infer
+from gui_utils import render_3d, make_csv_infer
 
 
 def predict(model, input_file, foot):
@@ -20,7 +20,7 @@ def predict(model, input_file, foot):
             output_csv_path=None,
         )
         result_df = inference(args).iloc[:, 1:]
-        render_img = render_stl(input_file)
+        render_img = render_3d(input_file)
         return render_img, result_df
     else:
         return None, None
