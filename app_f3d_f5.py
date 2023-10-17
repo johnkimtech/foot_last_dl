@@ -1,3 +1,6 @@
+# Demo application: Foot 3D -> Foot parameters (5)
+
+
 import argparse
 import gradio as gr
 from pathlib import Path

@@ -13,8 +13,7 @@ $: docker pull nqhoang/footlastdl:latest
 ### Run as Training
 **Requirements:** Make sure you have two folders named **data** (which stores that training / testing data) and folder **log** to store training checkpoints, history, and logs.
 ```console
-$: docker run -u $(id -u):$(id -g) --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it -v ./data:/app/data -v ./log:/app/log footlastdl python train_regression.py --model pointnet2_regression_attn --exp_name attn_ln_oct_16 --dataset_dir "data/3D_All_Foot/oct13new/" --num_points 3000 --n_epochs 4000 --finetune --batch_size 16
-
+$: docker run -u $(id -u):$(id -g) --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it -v ./data:/app/data -v ./log:/app/log footlastdl python train_regression.py --model pointnet2_regression_attn --exp_name attn_ln_oct_16 --dataset_dir "data/3D_All_Foot/oct13new/" --num_points 3000 --n_epochs 4000 --finetune --batch_size 16 --lr 1e-3
 ```
 <details>
   <summary>Explanation</summary>

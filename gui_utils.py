@@ -45,10 +45,12 @@ def render_3d(file):
     # Check if the file is None
     if file is None:
         return None
+    
+    file_name = getattr(file, "name", file)
 
-    if file.name.lower().endswith('.stl'):
+    if file_name.lower().endswith('.stl'):
         # Load STL file using the provided file name
-        mesh = o3d.io.read_triangle_mesh(file.name)
+        mesh = o3d.io.read_triangle_mesh(file_name)
 
         # Check if the loaded mesh is empty
         if len(mesh.vertices) == 0 or len(mesh.triangles) == 0:
@@ -73,8 +75,8 @@ def render_3d(file):
                 opacity=0.5,
             )
         )
-    elif file.name.lower().endswith('.txt'):
-        points = np.loadtxt(file.name, delimiter=",")[::2, :3].copy()
+    elif file_name.lower().endswith('.txt'):
+        points = np.loadtxt(file_name, delimiter=",")[::2, :3].copy()
         # Convert points to a NumPy array
         points_array = np.asarray(points)
 

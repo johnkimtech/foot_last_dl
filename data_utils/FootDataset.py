@@ -11,7 +11,7 @@ from data_utils.helpers import (
 )
 
 warnings.filterwarnings("ignore")
-foot_labels_cols = ["발 길이 ", "발볼 둘레 ", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
+# foot_labels_cols = ["발 길이 ", "발볼 둘레 ", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
 
 
 class FootDataset(Dataset):
@@ -79,7 +79,7 @@ class FootDataset(Dataset):
         if self.split == "infer":
             return points, scale, foot["No."]
 
-        labels = foot[foot_labels_cols].to_numpy().astype(float)
+        labels = foot[1:6].to_numpy().astype(float)
         labels_normalized = labels / scale
 
         return points, labels_normalized, scale

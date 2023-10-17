@@ -5,11 +5,19 @@ import logging
 import argparse
 import importlib
 import numpy as np
+import torch.nn as nn
 from pathlib import Path
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
 
 np.set_printoptions(precision=1, suppress=True)
+
+torch.manual_seed(42)
+np.random.seed(42)
+
+# If using GPU
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 
 # Parse command line arguments
@@ -109,7 +117,6 @@ def main():
 
     # Move model to the specified device
     regressor = regressor.to(args.device).eval()
-    regressor.encoder.eval()
 
     avg_mse, avg_mae = 0.0, 0.0
     real_mse, real_mae = 0.0, 0.0

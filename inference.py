@@ -13,8 +13,8 @@ from tabulate import tabulate
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
 
-foot_labels_cols = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
-# foot_labels_cols = ['No', 'Length', 'Ball Circumference', 'Instep Circumference', 'Heel Circumference', 'Toe Circumference']
+default_result_headers = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
+# result_headers = ['No', 'Length', 'Ball Circumference', 'Instep Circumference', 'Heel Circumference', 'Toe Circumference']
 
 
 # Parse command line arguments
@@ -27,6 +27,7 @@ def parse_args():
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--infer_data_csv", type=str)
     parser.add_argument("--output_csv_path", type=str, default=None)
+    parser.add_argument("--result_headers", type=str, default=default_result_headers)
 
     # Parse arguments from the command line
     return parser.parse_args()
@@ -88,7 +89,6 @@ def inference(args):
 
     # Move model to the specified device
     regressor = regressor.to(args.device).eval()
-    regressor.encoder.eval()
 
     # Create test datasets
     test_dataset = FootDataset(
@@ -98,17 +98,17 @@ def inference(args):
         infer_data_csv=args.infer_data_csv,
     )
     # Create data loaders
-    testDataLoader = DataLoader(
+    inferDataLoader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10
     )
     log_string("Running Inference...")
 
     tic = time.perf_counter()
 
-    results_df = pd.DataFrame(columns=foot_labels_cols)
+    results_df = pd.DataFrame(columns=args.result_headers)
     with torch.no_grad():
         for batch_id, (points, scale, foot_ids) in tqdm(
-            enumerate(testDataLoader, 0), total=len(testDataLoader), smoothing=0.8
+            enumerate(inferDataLoader, 0), total=len(inferDataLoader), smoothing=0.8
         ):
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
             scale = scale.numpy().reshape(scale.shape[0], 1)
@@ -117,7 +117,7 @@ def inference(args):
             pred = pred.cpu().detach().numpy() * scale
             new_df = pd.DataFrame(
                 np.hstack((np.array(foot_ids).reshape(-1, 1), np.round(pred, 3))),
-                columns=foot_labels_cols,
+                columns=args.result_headers or default_result_headers,
             )
             results_df = pd.concat((results_df, new_df))
 
