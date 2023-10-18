@@ -117,3 +117,4 @@ log
 data
 infer.csv
 flagged
+.VSCode*
