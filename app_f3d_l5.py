@@ -23,6 +23,7 @@ def predict(model, input_file, foot):
                 "result_headers",
             ),
         )
+        yield input_file.name, None, None
         args = Setting(
             exp_name=model,
             infer_data_csv=make_csv_infer(input_file.name, foot),
@@ -32,13 +33,12 @@ def predict(model, input_file, foot):
             result_headers=["No.", "발 길이", "발폭", "발볼 높이", "앞코 높이", "힐 높이"],
         )
         result_df = inference(args).iloc[:, 1:]
-        # render_img = render_3d(input_file)
+        yield input_file.name, result_df, None
         last_params_np = result_df.to_numpy().astype(float).squeeze()
         matched_last = find_last(last_params_np, LAST_DB_CSV)
         last_pc_path = matched_last["3D"]
-        # last_img = render_3d(last_pc_path)
-        # return render_img, result_df, last_img
-        return input_file.name, result_df, last_pc_path
+        yield input_file.name, result_df, last_pc_path
+        # return input_file.name, result_df, last_pc_path
     else:
         return None, None
 
@@ -90,4 +90,5 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    demo.queue()
     demo.launch(server_name=args.ip, server_port=args.port, share=args.public)

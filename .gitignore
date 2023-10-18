@@ -118,3 +118,4 @@ data
 infer.csv
 flagged
 .VSCode*
+.vscode

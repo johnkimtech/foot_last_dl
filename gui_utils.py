@@ -8,8 +8,6 @@ import pandas as pd
 import open3d as o3d
 from PIL import Image
 import plotly.graph_objects as go
-from gradio import Model3D
-
 
 def make_csv_infer(stl_file, foot):
     df = pd.DataFrame(
@@ -102,62 +100,3 @@ def render_3d(file):
     image = Image.open(io.BytesIO(image_bytes))
 
     return image
-
-
-from gradio import Model3D 
-from pathlib import Path
-
-class Model3D(Model3D):
-
-  def __init__(self):
-    super().__init__()
-  
-  def preprocess(self, x):
-    if x is None:
-      return x
-    
-    file_name, file_data, is_file = (x["name"], x["data"], x.get("is_file", False))
-    
-    if Path(file_name).suffix == ".stl":
-      # Specific handling for stl files
-      temp_file_path = self.stl_to_temp_file(file_data, file_name)
-    else:  
-      if is_file:
-        temp_file_path = self.make_temp_copy_if_needed(file_name)
-      else:
-        temp_file_path = self.base64_to_temp_file_if_needed(file_data, file_name)
-    
-    return temp_file_path
-
-  def postprocess(self, y):
-    if y is None:
-      return y
-    
-    ext = Path(y).suffix
-    if ext == ".stl":
-      data = {
-        "name": self.make_temp_copy_if_needed(y),
-        "data": None,
-        "is_file": True  
-      }
-    else:
-      data = {
-        "name": self.make_temp_copy_if_needed(y),
-        "data": None,
-        "is_file": True
-      }
-    return data
-
-  def as_example(self, input_data):
-    if input_data and Path(input_data).suffix == ".stl":
-      return "my_model.stl"
-    return Path(input_data).name if input_data else ""
-
-  def example_inputs(self):
-    examples = super().example_inputs()
-    examples["stl"] = {
-      "name": "my_model.stl",
-    #   "data": stl_file_base64,
-      "is_file": True
-    }
-    return examples
