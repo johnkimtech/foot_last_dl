@@ -23,54 +23,60 @@ def predict(model, input_file, foot):
                 "result_headers",
             ),
         )
-        yield input_file.name, None, None
         args = Setting(
             exp_name=model,
             infer_data_csv=make_csv_infer(input_file.name, foot),
             device="cpu",
-            batch_size=1,
+            batch_size=32,
             output_csv_path=None,
             result_headers=["No.", "발 길이", "발폭", "발볼 높이", "앞코 높이", "힐 높이"],
         )
         result_df = inference(args).iloc[:, 1:]
-        yield input_file.name, result_df, None
         last_params_np = result_df.to_numpy().astype(float).squeeze()
         matched_last = find_last(last_params_np, LAST_DB_CSV)
         last_pc_path = matched_last["3D"]
-        yield input_file.name, result_df, last_pc_path
-        # return input_file.name, result_df, last_pc_path
+        return result_df, last_pc_path
     else:
         return None, None
 
 
+def foot_show(file):
+    if file:
+        return file.name
+    else:
+        return None
+
+
 # Define the Gradio interface
-with gr.Blocks(title="Foot Parameter Regression", live=False) as demo:
+with gr.Blocks(title="Last Parameter Matching", live=False) as demo:
     # inputs
     with gr.Row():
         with gr.Column(scale=1):
+            gr.Markdown("# Input")
             model = gr.Radio(
                 label="Model",
-                choices=["attn_ln_oct_17"],
-                value="attn_ln_oct_17",
+                choices=["attn_ln_oct_18_no_layernorms"],
+                value="attn_ln_oct_18_no_layernorms",
                 visible=False,
             )
-            input_file = gr.File(label="Upload STL File of a Foot")
+            input_file = gr.File(label="Upload Foot STL File")
             foot = gr.Radio(
                 label="Left/Right Foot?", choices=["Left", "Right"], value="Left"
             )
 
             btn_submit = gr.Button("Predict")
 
-            img = gr.Model3D(label="3D Render of the STL input file")
+            foot_render = gr.Model3D(label="Preview of Foot STL")
         # outputs
         with gr.Column(scale=2):
-            result = gr.DataFrame(label="Estimated foot parameters")
-            # last_img = gr.Image(label="3D Render of the matched last")
-            last_img = gr.Model3D(label="3D Render of the matched last")
+            gr.Markdown("# Output")
+            result = gr.DataFrame(label="Estimated last parameters")
+            last_render = gr.Model3D(label="3D Render of the maching Last")
 
     # event handler
+    input_file.change(foot_show, input_file, foot_render)
     btn_submit.click(
-        predict, inputs=[model, input_file, foot], outputs=[img, result, last_img]
+        predict, inputs=[model, input_file, foot], outputs=[result, last_render]
     )
 
 

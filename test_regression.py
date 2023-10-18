@@ -35,6 +35,12 @@ def parse_args():
         default=False,
         help="print model configs including architecture and hyperparams",
     )
+    parser.add_argument(
+        "--print_pred",
+        action="store_true",
+        default=False,
+        help="print predictions",
+    )
 
     # Parse arguments from the command line
     return parser.parse_args()
@@ -138,8 +144,9 @@ def main():
             target = target.cpu().detach().numpy()
             pred = pred.cpu().detach().numpy()
 
-            for t, p in zip(target * scale, pred * scale):
-                print(f"{t} vs {p}")
+            if args.print_pred:
+                for t, p in zip(target * scale, pred * scale):
+                    print(f"{t} vs {p}")
 
             batch_size = points.shape[0]
             avg_mse += mse * batch_size / len_test
