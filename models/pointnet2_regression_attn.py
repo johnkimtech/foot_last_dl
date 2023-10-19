@@ -78,21 +78,21 @@ class Predictor(nn.Module):
         super(Predictor, self).__init__()
         self.use_skip_connection = use_skip_connection
         self.attn = nn.Sequential(
-            nn.BatchNorm1d(in_dims),
+            # nn.LayerNorm(in_dims),
             SimpleAttentionModule(in_dims, in_dims * 4, in_dims)
         )
 
         self.fc = nn.Sequential(
-            nn.BatchNorm1d(in_dims),
+            # nn.LayerNorm(in_dims),
             nn.Dropout(0.5),
             #
             nn.Linear(in_dims, 4 * in_dims),
-            nn.BatchNorm1d(4 * in_dims),
+            # nn.LayerNorm(4 * in_dims),
             nn.ReLU(),
             nn.Dropout(0.5),
             #
             nn.Linear(4 * in_dims, in_dims),
-            nn.BatchNorm1d(in_dims),
+            # nn.LayerNorm(in_dims),
             nn.ReLU(),
             nn.Dropout(0.5),
             #

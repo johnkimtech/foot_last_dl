@@ -4,7 +4,7 @@ import gradio as gr
 from pathlib import Path
 from inference import inference
 from collections import namedtuple
-from gui_utils import render_3d, make_csv_infer
+from gui_utils import make_csv_infer
 from foot_last_utils import find_last
 
 LAST_DB_CSV = "data/3D_All_Foot/last_db.csv"
@@ -33,7 +33,7 @@ def predict(model, input_file, foot):
         )
         result_df = inference(args).iloc[:, 1:]
         last_params_np = result_df.to_numpy().astype(float).squeeze()
-        matched_last = find_last(last_params_np, LAST_DB_CSV)
+        matched_last = find_last(last_params_np, LAST_DB_CSV, foot=foot)
         last_pc_path = matched_last["3D"]
         return result_df, last_pc_path
     else:

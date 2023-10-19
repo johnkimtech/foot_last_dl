@@ -19,9 +19,14 @@ def find_nearest_entry(input_vector, database):
 
 
 def find_last(
-    last_param, last_info_csv, headers=["발 길이", "발폭", "발볼 높이", "앞코 높이", "힐 높이"]
+    last_param,
+    last_info_csv,
+    headers=["발 길이", "발폭", "발볼 높이", "앞코 높이", "힐 높이"],
+    foot=None,
 ):
     last_df = pd.read_csv(last_info_csv).reset_index(drop=True)
+    if foot:
+        last_df = last_df[last_df["Foot"] == foot.upper()[0]]
     last_matrix = last_df.loc[:, headers].to_numpy()
     match_idx = find_nearest_entry(last_param, last_matrix)
     return last_df.iloc[match_idx, :]
