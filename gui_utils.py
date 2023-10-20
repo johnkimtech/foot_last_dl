@@ -8,16 +8,32 @@ import pandas as pd
 import open3d as o3d
 from PIL import Image
 import plotly.graph_objects as go
+from data_utils.helpers import stl_to_xyz_with_normals_vectorized
 
-def make_csv_infer(stl_file, foot):
+
+def make_csv_infer(stl_file, foot, loop=1, use_normals=False, convert_txt_first=False):
+    # convert stl to txt first to optimize runtime
+    if convert_txt_first:
+        input_file = random_file_path("txt")
+        stl_to_xyz_with_normals_vectorized(
+            input_stl_file=stl_file,
+            output_xyz_file=input_file,
+            stride=10,
+            with_normals=use_normals,
+            permutate=True,
+        )
+    else:
+        input_file = stl_file
+    # turn into df for dataloader
     df = pd.DataFrame(
         data=[
             {
                 "No.": "No Need",
                 "Foot": "L" if foot.lower() == "left" else "R",
-                "3D": stl_file,
+                "3D": input_file,
             }
         ]
+        * loop
     )
 
     temp_csv_path = random_file_path("csv")
@@ -44,10 +60,10 @@ def render_3d(file):
     # Check if the file is None
     if file is None:
         return None
-    
+
     file_name = getattr(file, "name", file)
 
-    if file_name.lower().endswith('.stl'):
+    if file_name.lower().endswith(".stl"):
         # Load STL file using the provided file name
         mesh = o3d.io.read_triangle_mesh(file_name)
 
@@ -74,7 +90,7 @@ def render_3d(file):
                 opacity=0.5,
             )
         )
-    elif file_name.lower().endswith('.txt'):
+    elif file_name.lower().endswith(".txt"):
         points = np.loadtxt(file_name, delimiter=",")[::2, :3].copy()
         # Convert points to a NumPy array
         points_array = np.asarray(points)
@@ -88,7 +104,7 @@ def render_3d(file):
                 x=points_array[:, 0],
                 y=points_array[:, 1],
                 z=points_array[:, 2],
-                mode='markers',
+                mode="markers",
                 marker=dict(size=1),
             )
         )

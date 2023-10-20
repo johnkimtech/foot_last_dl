@@ -9,4 +9,4 @@ FROM footlastdl_build
 WORKDIR /app
 COPY . /app
 EXPOSE 7860
-CMD ["python", "app.py"]
+CMD ["python", "app_f3d_l5.py"]

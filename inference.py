@@ -13,9 +13,12 @@ from tabulate import tabulate
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
 
-default_result_headers = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
-# result_headers = ['No', 'Length', 'Ball Circumference', 'Instep Circumference', 'Heel Circumference', 'Toe Circumference']
+torch.set_default_tensor_type(torch.FloatTensor)
+# If using GPU
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
+default_result_headers = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
 
 # Parse command line arguments
 def parse_args():
@@ -24,7 +27,7 @@ def parse_args():
     # Define command line arguments
     parser.add_argument("--exp_name", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--infer_data_csv", type=str)
     parser.add_argument("--output_csv_path", type=str, default=None)
     parser.add_argument("--result_headers", type=str, default=default_result_headers)
@@ -74,7 +77,7 @@ def inference(args):
     model = importlib.import_module(checkpoint["model"], libpath)
 
     # Create the regression model
-    
+
     regressor = model.get_model(
         backbone_model_name=checkpoint["backbone_model"],
         backbone_pretrained_path=None,
@@ -124,7 +127,7 @@ def inference(args):
     toc = time.perf_counter()
     total_time = toc - tic
     results_df.reset_index(drop=True, inplace=True)
-    print('*'*20)
+    print("*" * 20)
     print("INFERENCE RESULTS:")
     print(tabulate(results_df, headers="keys", tablefmt="simple_grid", showindex=False))
     print(

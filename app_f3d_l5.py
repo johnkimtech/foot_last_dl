@@ -1,6 +1,7 @@
 # Demo application: Foot 3D -> Last parameters (5)
 import argparse
 import gradio as gr
+import pandas as pd
 from pathlib import Path
 from inference import inference
 from collections import namedtuple
@@ -8,9 +9,37 @@ from gui_utils import make_csv_infer
 from foot_last_utils import find_last
 
 LAST_DB_CSV = "data/3D_All_Foot/last_db.csv"
+TABLE_HEADERS = ["No.", "라스트 길이", "라스트 폭", "라스트볼 높이", "앞코 높이", "힐 높이"]
+CHECKPOINT = "attn_ln_oct_18_no_layernorms_batchsize4"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Your program description here.")
+
+    # Define command line arguments
+    parser.add_argument("--ip", type=str, default="0.0.0.0")
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--port", type=int, default=7860)
+    parser.add_argument(
+        "--multi", type=int, default=4
+    )  # Run input multiple times and take the average
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        default=False,
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
+
+
+def postprocess_results(result):
+    return result.mean(axis=0)
 
 
 def predict(model, input_file, foot):
+    global args
     if model and input_file and foot:
         Setting = namedtuple(
             "Setting",
@@ -23,19 +52,23 @@ def predict(model, input_file, foot):
                 "result_headers",
             ),
         )
-        args = Setting(
+        config = Setting(
             exp_name=model,
-            infer_data_csv=make_csv_infer(input_file.name, foot),
-            device="cpu",
-            batch_size=32,
+            infer_data_csv=make_csv_infer(input_file.name, foot, loop=args.multi),
+            device=args.device,
+            batch_size=1,
             output_csv_path=None,
-            result_headers=["No.", "발 길이", "발폭", "발볼 높이", "앞코 높이", "힐 높이"],
+            result_headers=TABLE_HEADERS,
         )
-        result_df = inference(args).iloc[:, 1:]
+        result_df = inference(config).iloc[:, 1:]
         last_params_np = result_df.to_numpy().astype(float).squeeze()
-        matched_last = find_last(last_params_np, LAST_DB_CSV, foot=foot)
+        last_params_np = postprocess_results(last_params_np)
+        matched_last = find_last(
+            last_params_np, LAST_DB_CSV, TABLE_HEADERS[1:], foot=foot
+        )
+        result_df = result_df.apply(pd.to_numeric).mean(axis=0).round(3)
         last_pc_path = matched_last["3D"]
-        return result_df, last_pc_path
+        return result_df.to_frame().T, last_pc_path
     else:
         return None, None
 
@@ -48,18 +81,20 @@ def foot_show(file):
 
 
 # Define the Gradio interface
-with gr.Blocks(title="Last Parameter Matching", live=False) as demo:
+with gr.Blocks(title="Last Parameter Prediction", live=False) as demo:
+    print("Using:", args.device)
     # inputs
+    gr.Markdown("# Last Parameter Prediction")
     with gr.Row():
         with gr.Column(scale=1):
-            gr.Markdown("# Input")
+            gr.Markdown("## Input")
             model = gr.Radio(
                 label="Model",
-                choices=["attn_ln_oct_18_no_layernorms"],
-                value="attn_ln_oct_18_no_layernorms",
+                choices=[CHECKPOINT],
+                value=CHECKPOINT,
                 visible=False,
             )
-            input_file = gr.File(label="Upload Foot STL File")
+            input_file = gr.File(label="Upload Foot STL File", file_types=[".stl"])
             foot = gr.Radio(
                 label="Left/Right Foot?", choices=["Left", "Right"], value="Left"
             )
@@ -69,8 +104,10 @@ with gr.Blocks(title="Last Parameter Matching", live=False) as demo:
             foot_render = gr.Model3D(label="Preview of Foot STL")
         # outputs
         with gr.Column(scale=2):
-            gr.Markdown("# Output")
-            result = gr.DataFrame(label="Estimated last parameters")
+            gr.Markdown("## Output")
+            result = gr.DataFrame(
+                label="Estimated last parameters", headers=TABLE_HEADERS[1:]
+            )
             last_render = gr.Model3D(label="3D Render of the maching Last")
 
     # event handler
@@ -80,21 +117,6 @@ with gr.Blocks(title="Last Parameter Matching", live=False) as demo:
     )
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Your program description here.")
-
-    # Define command line arguments
-    parser.add_argument("--ip", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7860)
-    parser.add_argument(
-        "--public",
-        action="store_true",
-        default=False,
-    )
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
-    args = parse_args()
     demo.queue()
     demo.launch(server_name=args.ip, server_port=args.port, share=args.public)

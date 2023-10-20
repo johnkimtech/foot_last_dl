@@ -56,5 +56,5 @@ $: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log foo
 ### Run as Web demo (Gradio)
 **Requirements:** Make sure you have a named folder **log** which contains training checkpoints, history, and logs.
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -p 7860:7860 footlastdl
+$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl
 ```
