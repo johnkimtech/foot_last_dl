@@ -6,6 +6,7 @@ import argparse
 import importlib
 import numpy as np
 import torch.nn as nn
+from tqdm import tqdm
 from pathlib import Path
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
@@ -130,7 +131,10 @@ def main():
     len_test = len(test_dataset)
     tic = time.perf_counter()
     with torch.no_grad():
-        for batch_id, (points, target, scale) in enumerate(testDataLoader, 0):
+        pbar = enumerate(testDataLoader, 0)
+        if not args.print_pred:
+            pbar = tqdm(pbar, total=len(testDataLoader), smoothing=0.9)
+        for batch_id, (points, target, scale) in pbar:
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
             target = torch.tensor(target, dtype=torch.float32, device=args.device)
             target = target[:, : checkpoint["out_features"]]

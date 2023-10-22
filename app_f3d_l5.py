@@ -10,7 +10,7 @@ from foot_last_utils import find_last
 
 LAST_DB_CSV = "data/3D_All_Foot/last_db.csv"
 TABLE_HEADERS = ["No.", "라스트 길이", "라스트 폭", "라스트볼 높이", "앞코 높이", "힐 높이"]
-CHECKPOINT = "attn_ln_oct_18_no_layernorms_batchsize4"
+CHECKPOINT = "attn_mlp_oct20"
 
 
 def parse_args():
@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--ip", type=str, default="0.0.0.0")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--port", type=int, default=7860)
+    parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument(
         "--multi", type=int, default=4
     )  # Run input multiple times and take the average
@@ -56,7 +57,7 @@ def predict(model, input_file, foot):
             exp_name=model,
             infer_data_csv=make_csv_infer(input_file.name, foot, loop=args.multi),
             device=args.device,
-            batch_size=1,
+            batch_size=args.batch_size,
             output_csv_path=None,
             result_headers=TABLE_HEADERS,
         )

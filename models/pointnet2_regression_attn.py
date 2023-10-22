@@ -28,44 +28,52 @@ class SimpleAttentionModule(nn.Module):
     linear layers. Calculates dot product attention weights and returns weighted sum of values.
     """
 
-    def __init__(self, DX, DQ, DV):
+    def __init__(self, in_dims, out_dims):
         """
-        DX: input feature dimensions
-        DQ: dimensions for queries and keys
-        DV: dimensions for values
+        in_dims: input feature dimensions
+        out_dims: dimensions for queries and keys
+        out_dims: dimensions for values
         """
+        self.in_dims = in_dims
+        self.out_dims = out_dims
         super(SimpleAttentionModule, self).__init__()
 
         # Linear layers to project input to queries, keys and values
-        self.lin_q = nn.Linear(DX, DQ)
-        self.lin_k = nn.Linear(DX, DQ)
-        self.lin_v = nn.Linear(DX, DV)
+        self.lin_q = nn.Linear(in_dims, out_dims)
+        self.lin_k = nn.Linear(in_dims, out_dims)
+        self.lin_v = nn.Linear(in_dims, out_dims)
 
-        # Store sqrt(DQ) for normalization
-        self.sqrtDQ = math.sqrt(DQ)
+        # Store sqrt(out_dims) for normalization
+        self.sqrtout_dims = math.sqrt(out_dims)
 
     def forward(self, x, return_attention_weights=False):
         """
-        x: input features (batch_size, DX)
+        x: input features (batch_size, in_dims)
         return_attention_weights: optionally return attention weights
         Returns:
-          y: weighted sum of values (batch_size, DV)
+          y: weighted sum of values (batch_size, out_dims)
           attn: attention weights (optional, only if return_attention_weights=True)
         """
+        B = x.shape[0] # batch_size
 
         # Project input to queries, keys and values
-        q = self.lin_q(x)
-        k = self.lin_k(x)
-        v = self.lin_v(x)
+        q = self.lin_q(x)  # B x out_dims
+        k = self.lin_k(x)  # B x out_dims
+        v = self.lin_v(x)  # B x out_dims
 
         # Calculate dot product similarity
-        e = q @ k.T / self.sqrtDQ
+        # e = q @ k.T / self.sqrtout_dims # -> Wrong, it relates elements between batch which is inaccurate in our problem
+
+        e = (
+            torch.bmm(q.view(B, self.out_dims, 1), k.view(B, 1, self.out_dims))
+            / self.sqrtout_dims
+        )
 
         # Get attention weights
-        attn = torch.softmax(e, dim=1)
+        attn = torch.softmax(e, dim=2)
 
         # Weighted sum of values
-        y = attn @ v
+        y = torch.bmm(attn, v.view(B, self.out_dims, 1)).squeeze()
 
         if return_attention_weights:
             return y, attn
@@ -78,21 +86,16 @@ class Predictor(nn.Module):
         super(Predictor, self).__init__()
         self.use_skip_connection = use_skip_connection
         self.attn = nn.Sequential(
-            # nn.LayerNorm(in_dims),
-            SimpleAttentionModule(in_dims, in_dims * 4, in_dims)
+            nn.BatchNorm1d(in_dims),
+            SimpleAttentionModule(in_dims, in_dims * 4),
         )
 
         self.fc = nn.Sequential(
-            # nn.LayerNorm(in_dims),
-            nn.Dropout(0.5),
-            #
-            nn.Linear(in_dims, 4 * in_dims),
-            # nn.LayerNorm(4 * in_dims),
-            nn.ReLU(),
+            nn.BatchNorm1d(4 * in_dims),
             nn.Dropout(0.5),
             #
             nn.Linear(4 * in_dims, in_dims),
-            # nn.LayerNorm(in_dims),
+            nn.BatchNorm1d(in_dims),
             nn.ReLU(),
             nn.Dropout(0.5),
             #
