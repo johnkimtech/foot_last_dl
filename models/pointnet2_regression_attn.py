@@ -73,7 +73,7 @@ class SimpleAttentionModule(nn.Module):
         attn = torch.softmax(e, dim=2)
 
         # Weighted sum of values
-        y = torch.bmm(attn, v.view(B, self.out_dims, 1)).squeeze()
+        y = torch.bmm(attn, v.view(B, self.out_dims, 1)).squeeze(dim=-1) # remember the dim, special case when batch_size is 1 which gets squeezed together with the last dim
 
         if return_attention_weights:
             return y, attn
