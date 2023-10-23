@@ -1,3 +1,34 @@
+# Requirements
+## Hardware
+This is the PC on which the code was developed
+- CPU: Intel Core i7-9700 (8 cores)
+- RAM: 32GB
+- GPU: nVidia Gefore RTX3070Ti - 8GB (GPU is not required, but code runs faster with it)
+
+
+## Software
+- OS: Windows / Linux
+- Python: 3.10.13
+- Pip: 23.2.1
+- PyTorch: 2.0.1
+
+## Methods of installation
+1. **Run from scratch**: Setup the environment from scratch and install all dependencies by yourself. This is more common and consumes less disk space. However, it could lead to software incompatiblity.
+2. **Run with Docker**: Prebuilt Docker image is available which contains everything for the code to run on. Downside is that not all systems have Docker installed and it could take up large amount of disk space.
+
+# Run from scratch
+
+1. Install Miniconda: https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html
+2. Install PyTorch: https://pytorch.org/get-started/locally/ (Remember to choose GPU version if you have one)
+3. Install Dependencies: Install all required libraries with
+```console
+$: pip install --no-cache-dir -r requirements.txt
+```
+
+
+# Run with Docker
+This provides everything to run the model without having to install python dependencies.
+However, you should have Docker installed on your PC as a requirement.
 ## Build docker image
 You can build a new docker image before running:
 ```console
