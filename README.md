@@ -39,16 +39,32 @@ python app_f3d_l5.py --device cuda
 This provides everything to run the model without having to install python dependencies.
 However, you should have Docker installed on your PC as a requirement.
 ## Build docker image
-You can build a new docker image before running:
-```console
-docker build --pull --rm -f "Dockerfile" -t footlastdl:latest "." 
-```
-Alternatively, you can use prebuilt image with:
+Use prebuilt image with:
 ```console
 docker pull nqhoang/footlastdl:latest
 ```
 
+Alternatively, you can build a new docker image before running:
+```console
+docker build --pull --rm -f "Dockerfile" -t footlastdl:latest "." 
+```
+
 ## Running
+
+
+### Run as Web demo (Gradio)
+**Requirements:** Make sure you have a named folder **log** which contains training checkpoints, history, and logs.
+
+**CPU:**
+```console
+docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cpu
+```
+
+**GPU:**
+```console
+docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cuda
+```
+
 
 ### Run as Training
 **Requirements:** Make sure you have two folders named **data** (which stores that training / testing data) and folder **log** to store training checkpoints, history, and logs.
@@ -91,17 +107,4 @@ docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footla
 **Requirements:** Same as testing
 ```console
 docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python inference.py --exp_name attn_ln --infer_data_csv "data/3D_All_Foot/oct13new/infer.csv" --device cpu --batch_size 4
-```
-
-### Run as Web demo (Gradio)
-**Requirements:** Make sure you have a named folder **log** which contains training checkpoints, history, and logs.
-
-**CPU:**
-```console
-docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cpu
-```
-
-**GPU:**
-```console
-docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cuda
 ```
