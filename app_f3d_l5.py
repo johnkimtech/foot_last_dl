@@ -20,9 +20,9 @@ def parse_args():
     parser.add_argument("--ip", type=str, default="0.0.0.0")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--port", type=int, default=7860)
-    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument(
-        "--multi", type=int, default=4
+        "--multi", type=int, default=1
     )  # Run input multiple times and take the average
     parser.add_argument(
         "--public",

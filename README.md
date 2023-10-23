@@ -3,7 +3,7 @@
 This is the PC on which the code was developed
 - CPU: Intel Core i7-9700 (8 cores)
 - RAM: 32GB
-- GPU: nVidia Gefore RTX3070Ti - 8GB (GPU is not required, but code runs faster with it)
+- GPU: nVidia Gefore RTX3070Ti - 8GB (GPU is not required, but code runs faster with it).
 
 
 ## Software
@@ -20,11 +20,20 @@ This is the PC on which the code was developed
 
 1. Install Miniconda: https://docs.conda.io/projects/miniconda/en/latest/miniconda-install.html
 2. Install PyTorch: https://pytorch.org/get-started/locally/ (Remember to choose GPU version if you have one)
-3. Install Dependencies: Install all required libraries with
+3. Install Dependencies: Install all required libraries with (remember to activate your conda environment before using this command)
 ```console
 $: pip install --no-cache-dir -r requirements.txt
 ```
+4. Run web demo:
 
+**CPU:**
+```console
+$: python app_f3d_l5.py --device cpu
+```
+**GPU:**
+```console
+$: python app_f3d_l5.py --device cuda
+```
 
 # Run with Docker
 This provides everything to run the model without having to install python dependencies.
@@ -86,6 +95,13 @@ $: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log foo
 
 ### Run as Web demo (Gradio)
 **Requirements:** Make sure you have a named folder **log** which contains training checkpoints, history, and logs.
+
+**CPU:**
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl
+$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cpu
+```
+
+**GPU:**
+```console
+$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cuda
 ```
