@@ -14,9 +14,6 @@ from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
 
 torch.set_default_tensor_type(torch.FloatTensor)
-# If using GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
 
 default_result_headers = ["No.", "발 길이", "발볼 둘레", "발등 둘레", "발 뒤꿈치 둘레", "발가락 둘레"]
 

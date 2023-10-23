@@ -10,11 +10,11 @@ from tqdm import tqdm
 from pathlib import Path
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
+from data_utils.helpers import seed_everything_deterministic
+
+
 
 np.set_printoptions(precision=1, suppress=True)
-
-torch.manual_seed(42)
-np.random.seed(42)
 
 # If using GPU
 torch.backends.cudnn.deterministic = True
@@ -29,7 +29,9 @@ def parse_args():
     parser.add_argument("--dataset_dir", type=str, default="data/3D_All_Foot/oct12")
     parser.add_argument("--exp_name", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--device", type=str, default="cpu")
+    
     parser.add_argument(
         "--print_config",
         action="store_true",
@@ -56,6 +58,9 @@ def main():
 
     # Parse command line arguments
     args = parse_args()
+
+    if args.seed is not None:
+        seed_everything_deterministic(args.seed)
 
     # Get the current date and time for creating experiment directories
     EXP_DIR = Path("log/regression") / args.exp_name

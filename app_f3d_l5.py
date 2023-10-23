@@ -10,7 +10,7 @@ from foot_last_utils import find_last
 
 LAST_DB_CSV = "data/3D_All_Foot/last_db.csv"
 TABLE_HEADERS = ["No.", "라스트 길이", "라스트 폭", "라스트볼 높이", "앞코 높이", "힐 높이"]
-CHECKPOINT = "attn_mlp_oct20"
+CHECKPOINT = "attn_oct22deep"
 
 
 def parse_args():

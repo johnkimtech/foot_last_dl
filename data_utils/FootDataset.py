@@ -1,5 +1,6 @@
 import os
 import warnings
+import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
 from data_utils.helpers import (
@@ -67,7 +68,7 @@ class FootDataset(Dataset):
             raise (f"Unsupported data file extension: {pc_ext}")
 
         dims = 6 if self.use_normals else 3
-        points = points[: self.npoints, :dims].astype(float)
+        points = points[: self.npoints, :dims].astype(np.float32)
 
         points[:, 0:3], scale = pc_normalize(points[:, 0:3], return_scale=True)
 
@@ -79,7 +80,7 @@ class FootDataset(Dataset):
         if self.split == "infer":
             return points, scale, foot["No."]
 
-        labels = foot[1:6].to_numpy().astype(float)
+        labels = foot[1:6].to_numpy().astype(np.float32)
         labels_normalized = labels / scale
 
         return points, labels_normalized, scale

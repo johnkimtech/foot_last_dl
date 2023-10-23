@@ -34,9 +34,9 @@ class SimpleAttentionModule(nn.Module):
         out_dims: dimensions for queries and keys
         out_dims: dimensions for values
         """
+        super(SimpleAttentionModule, self).__init__()
         self.in_dims = in_dims
         self.out_dims = out_dims
-        super(SimpleAttentionModule, self).__init__()
 
         # Linear layers to project input to queries, keys and values
         self.lin_q = nn.Linear(in_dims, out_dims)
