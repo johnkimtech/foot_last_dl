@@ -22,17 +22,17 @@ This is the PC on which the code was developed
 2. Install PyTorch: https://pytorch.org/get-started/locally/ (Remember to choose GPU version if you have one)
 3. Install Dependencies: Install all required libraries with (remember to activate your conda environment before using this command)
 ```console
-$: pip install --no-cache-dir -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 ```
 4. Run web demo:
 
 **CPU:**
 ```console
-$: python app_f3d_l5.py --device cpu
+python app_f3d_l5.py --device cpu
 ```
 **GPU:**
 ```console
-$: python app_f3d_l5.py --device cuda
+python app_f3d_l5.py --device cuda
 ```
 
 # Run with Docker
@@ -41,11 +41,11 @@ However, you should have Docker installed on your PC as a requirement.
 ## Build docker image
 You can build a new docker image before running:
 ```console
-$: docker build --pull --rm -f "Dockerfile" -t footlastdl:latest "." 
+docker build --pull --rm -f "Dockerfile" -t footlastdl:latest "." 
 ```
 Alternatively, you can use prebuilt image with:
 ```console
-$: docker pull nqhoang/footlastdl:latest
+docker pull nqhoang/footlastdl:latest
 ```
 
 ## Running
@@ -53,7 +53,7 @@ $: docker pull nqhoang/footlastdl:latest
 ### Run as Training
 **Requirements:** Make sure you have two folders named **data** (which stores that training / testing data) and folder **log** to store training checkpoints, history, and logs.
 ```console
-$: docker run -u $(id -u):$(id -g) --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it -v ./data:/app/data -v ./log:/app/log footlastdl python train_regression.py --model pointnet2_regression_attn --exp_name attn_oct22 --dataset_dir "data/3D_All_Foot/oct17_f3d_l5/" --num_points 3000 --n_epochs 4000 --finetune --batch_size 32 --lr 1e-4
+docker run -u $(id -u):$(id -g) --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it -v ./data:/app/data -v ./log:/app/log footlastdl python train_regression.py --model pointnet2_regression_attn --exp_name attn_oct22 --dataset_dir "data/3D_All_Foot/oct17_f3d_l5/" --num_points 3000 --n_epochs 4000 --finetune --batch_size 32 --lr 1e-4
 ```
 <details>
   <summary>Explanation</summary>
@@ -85,12 +85,12 @@ In summary, the Docker command is running a container based on the footlastdl im
 ### Run as Testing
 **Requirements:** Same as training
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python test_regression.py --exp_name attn_ln --dataset_dir "data/3D_All_Foot/oct13new/"
+docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python test_regression.py --exp_name attn_ln --dataset_dir "data/3D_All_Foot/oct13new/"
 ```
 ### Run as Inference (without ground truths)
 **Requirements:** Same as testing
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python inference.py --exp_name attn_ln --infer_data_csv "data/3D_All_Foot/oct13new/infer.csv" --device cpu --batch_size 4
+docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log footlastdl python inference.py --exp_name attn_ln --infer_data_csv "data/3D_All_Foot/oct13new/infer.csv" --device cpu --batch_size 4
 ```
 
 ### Run as Web demo (Gradio)
@@ -98,10 +98,10 @@ $: docker run -u $(id -u):$(id -g) -it -v ./data:/app/data -v ./log:/app/log foo
 
 **CPU:**
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cpu
+docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cpu
 ```
 
 **GPU:**
 ```console
-$: docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cuda
+docker run -u $(id -u):$(id -g) -it -v ./log:/app/log -v ./data:/app/data -p 7860:7860 footlastdl python app_f3d_l5.py --device cuda
 ```
