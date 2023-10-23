@@ -38,6 +38,11 @@ python app_f3d_l5.py --device cuda
 # Run with Docker
 This provides everything to run the model without having to install python dependencies.
 However, you should have Docker installed on your PC as a requirement.
+
+**Docker Installation Guide:**
+
+1. Ubuntu: https://docs.nvidia.com/ai-enterprise/deployment-guide-vmware/0.1.0/docker.html
+2. Windows: https://docs.nvidia.com/cuda/wsl-user-guide/index.html
 ## Build docker image
 Use prebuilt image with:
 ```console
