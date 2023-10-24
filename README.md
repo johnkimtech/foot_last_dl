@@ -25,7 +25,7 @@ You can choose either of these approaches:
 ```console
 pip install --no-cache-dir -r requirements.txt
 ```
-4. Run web demo:
+### Run web demo:
 
 **CPU:**
 ```console
