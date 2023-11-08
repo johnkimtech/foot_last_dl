@@ -41,6 +41,9 @@ class FootDataset(Dataset):
         else:
             self.df = pd.read_csv(infer_data_csv)
 
+    def get_foot_ids(self) -> list[str]:
+        return self.df['No.'].tolist()
+
     def __len__(self):
         return len(self.df)
 

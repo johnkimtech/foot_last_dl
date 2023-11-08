@@ -135,6 +135,7 @@ def main():
     # Training loop
     len_test = len(test_dataset)
     i = 0
+    foot_ids = test_dataset.get_foot_ids()
     tic = time.perf_counter()
     with torch.no_grad():
         pbar = enumerate(testDataLoader, 0)
@@ -156,7 +157,8 @@ def main():
 
             if args.print_pred:
                 for t, p in zip(target * scale, pred * scale):
-                    print(f"{i}.\t{t} vs {p}")
+                    fid = foot_ids[i]
+                    print(f"{fid}:\t\t{t} vs {p}")
                     i += 1
 
             batch_size = points.shape[0]

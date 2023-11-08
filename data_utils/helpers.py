@@ -5,29 +5,24 @@ from stl import mesh
 import open3d as o3d
 from open3d.visualization import draw_plotly
 
+def clean_up_mesh(mesh):
+    mesh.remove_duplicated_triangles()
+    mesh.remove_duplicated_vertices()
+    triangle_clusters, cluster_n_triangles, cluster_area = (
+        mesh.cluster_connected_triangles())
+    triangle_clusters = np.asarray(triangle_clusters)
+    cluster_n_triangles = np.asarray(cluster_n_triangles)
+    cluster_area = np.asarray(cluster_area)
 
-def random_sample(mesh, number_of_points, seed):
-    random.seed(seed)
-    data = np.array(mesh.vertices)
-    mask = np.isnan(data).any(axis=1)
-    vertices = data[~mask]
-    pcd = o3d.geometry.PointCloud()
-    idx = random.choices(range(vertices.shape[0]), k=number_of_points)
-    pcd.points = o3d.utility.Vector3dVector(vertices[idx])
-    return pcd
+    triangles_to_remove = cluster_n_triangles[triangle_clusters] < 100
+    mesh.remove_triangles_by_mask(triangles_to_remove)
+    return mesh
 
-def mesh_to_pointcloud(input_mesh_file, output_pc_file=None, max_points=2048, visualize=False, voxel_size=6,nb_neighbors=300, std_ratio=.999,nb_points=225, radius=150, sep=',', with_normals=True, flip_axis=None, seed=42):
-    data = o3d.io.read_triangle_mesh(input_mesh_file)
+def mesh_to_pointcloud(input_mesh_file, output_pc_file=None, max_points=2048, visualize=False, sep=',', flip_axis=None):
+    data = o3d.io.read_triangle_mesh(input_mesh_file)  
     if visualize:draw_plotly([data]);
-    data = random_sample(data, number_of_points=6000, seed=seed)
-    # voxel downsample
-    data = data.voxel_down_sample(voxel_size=voxel_size)
-    # statistical outlier removal
-    data, _ = data.remove_statistical_outlier(nb_neighbors=nb_neighbors, std_ratio=std_ratio)
-
-    # radius outlier removal
-    data, _ = data.remove_radius_outlier(nb_points=nb_points, radius=radius)
-
+    data =  clean_up_mesh(data)  
+    data = data.sample_points_uniformly(max_points)
     # flip
     if flip_axis:
         T = np.eye(4)
