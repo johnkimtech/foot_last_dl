@@ -9,6 +9,7 @@ from data_utils.helpers import (
     shift_point_cloud,
     pc_normalize,
     stl_to_xyz_with_normals_vectorized,
+    mesh_to_pointcloud
 )
 
 warnings.filterwarnings("ignore")
@@ -52,18 +53,20 @@ class FootDataset(Dataset):
 
         if pc_ext.lower() == ".txt":
             points = read_point_cloud_text(
-                pc_path, flip_axis=1 if foot["Foot"] == "R" else -1
+                pc_path,
+                flip_axis=1 if foot["Foot"] == "R" else -1,
+                use_normals=self.use_normals,
             )
         elif pc_ext.lower() == ".stl":
             # Only use STL in inference / testing, not in TRAINING
-            points = stl_to_xyz_with_normals_vectorized(
-                pc_path,
-                stride=10,
-                flip_axis=1 if foot["Foot"] == "R" else -1,
-                with_normals=self.use_normals,
-                permutate=True,
-            )
-            # print('Converted', points.shape)
+            # points = stl_to_xyz_with_normals_vectorized(
+            #     pc_path,
+            #     stride=10,
+            #     flip_axis=1 if foot["Foot"] == "R" else -1,
+            #     with_normals=self.use_normals,
+            #     permutate=True,
+            # )
+            points = mesh_to_pointcloud(pc_path, max_points=self.npoints)
         else:
             raise (f"Unsupported data file extension: {pc_ext}")
 

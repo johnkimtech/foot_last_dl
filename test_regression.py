@@ -134,6 +134,7 @@ def main():
     real_mse, real_mae = 0.0, 0.0
     # Training loop
     len_test = len(test_dataset)
+    i = 0
     tic = time.perf_counter()
     with torch.no_grad():
         pbar = enumerate(testDataLoader, 0)
@@ -155,7 +156,8 @@ def main():
 
             if args.print_pred:
                 for t, p in zip(target * scale, pred * scale):
-                    print(f"{t} vs {p}")
+                    print(f"{i}.\t{t} vs {p}")
+                    i += 1
 
             batch_size = points.shape[0]
             avg_mse += mse * batch_size / len_test

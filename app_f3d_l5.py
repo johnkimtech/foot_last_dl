@@ -10,7 +10,7 @@ from foot_last_utils import find_last
 
 LAST_DB_CSV = "data/3D_All_Foot/last_db.csv"
 TABLE_HEADERS = ["No.", "라스트 길이", "라스트 폭", "라스트볼 높이", "앞코 높이", "힐 높이"]
-CHECKPOINT = "attn_oct22deep"
+CHECKPOINT = "attn_nov7"
 
 
 def parse_args():
@@ -38,6 +38,8 @@ args = parse_args()
 def postprocess_results(result):
     return result.mean(axis=0)
 
+def preprocess_data(input_file):
+    pass
 
 def predict(model, input_file, foot):
     global args

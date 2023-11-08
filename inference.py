@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import time
 import torch
 import logging
@@ -8,6 +8,7 @@ import importlib
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import multiprocessing
 from pathlib import Path
 from tabulate import tabulate
 from torch.utils.data import DataLoader
@@ -99,7 +100,8 @@ def inference(args):
     )
     # Create data loaders
     inferDataLoader = DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=10,
+        multiprocessing_context=multiprocessing.get_context('spawn')
     )
     log_string("Running Inference...")
 

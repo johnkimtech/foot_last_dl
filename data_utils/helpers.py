@@ -2,7 +2,43 @@ import random
 import torch
 import numpy as np
 from stl import mesh
-import open3d as o3
+import open3d as o3d
+from open3d.visualization import draw_plotly
+
+
+def random_sample(mesh, number_of_points, seed):
+    random.seed(seed)
+    data = np.array(mesh.vertices)
+    mask = np.isnan(data).any(axis=1)
+    vertices = data[~mask]
+    pcd = o3d.geometry.PointCloud()
+    idx = random.choices(range(vertices.shape[0]), k=number_of_points)
+    pcd.points = o3d.utility.Vector3dVector(vertices[idx])
+    return pcd
+
+def mesh_to_pointcloud(input_mesh_file, output_pc_file=None, max_points=2048, visualize=False, voxel_size=6,nb_neighbors=300, std_ratio=.999,nb_points=225, radius=150, sep=',', with_normals=True, flip_axis=None, seed=42):
+    data = o3d.io.read_triangle_mesh(input_mesh_file)
+    if visualize:draw_plotly([data]);
+    data = random_sample(data, number_of_points=6000, seed=seed)
+    # voxel downsample
+    data = data.voxel_down_sample(voxel_size=voxel_size)
+    # statistical outlier removal
+    data, _ = data.remove_statistical_outlier(nb_neighbors=nb_neighbors, std_ratio=std_ratio)
+
+    # radius outlier removal
+    data, _ = data.remove_radius_outlier(nb_points=nb_points, radius=radius)
+
+    # flip
+    if flip_axis:
+        T = np.eye(4)
+        T[flip_axis] *= -1
+        data = data.transform(T)
+    
+    if visualize:draw_plotly([data]);
+    data = np.asarray(data.points)[:max_points]
+    if output_pc_file:
+        np.savetxt(output_pc_file, data, fmt='%.6f', delimiter=sep)
+    return data
 
 def seed_everything_deterministic(seed):
     try:
@@ -80,7 +116,8 @@ def read_point_cloud_text(points_file, stride=1, flip_axis=-1, use_normals=True)
     # transformation
     if flip_axis > -1:
         points[:, flip_axis] = -points[:, flip_axis]
-        points[:, flip_axis + 3] = -points[:, flip_axis + 3]
+        if use_normals:
+            points[:, flip_axis + 3] = -points[:, flip_axis + 3]
     return points
 
 
@@ -90,15 +127,15 @@ def visualize_pointcloud(points_file, stride=1, flip_axis=-1, postprocess_fn=Non
 
 
 def visualize_pointcloud_np(points, flip_axis=-1, postprocess_fn=None):
-    pcd = o3.geometry.PointCloud()
+    pcd = o3d.geometry.PointCloud()
     # transformation
     if flip_axis > -1:
         points[:, flip_axis] = -points[:, flip_axis]
     if postprocess_fn:
         points = postprocess_fn(points)
     # visualize
-    pcd.points = o3.utility.Vector3dVector(points)
-    o3.visualization.draw_plotly([pcd])
+    pcd.points = o3d.utility.Vector3dVector(points)
+    o3d.visualization.draw_plotly([pcd])
 
 def random_point_dropout(points, max_dropout_ratio=0.875):
     dropout_ratio =  np.random.random()*max_dropout_ratio # 0~0.875
@@ -114,7 +151,7 @@ def shift_point_cloud(points, shift_range=0.1):
 
 
 def obj_to_xyz_normals(input_path, output_path, sep=','):
-    mesh = o3.io.read_triangle_mesh(input_path)
+    mesh = o3d.io.read_triangle_mesh(input_path)
     mesh.compute_vertex_normals()
 
     vertices = np.asarray(mesh.vertices)
