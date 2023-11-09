@@ -143,8 +143,6 @@ def main():
     errors = []
     tic = time.perf_counter()
     with torch.no_grad():
-        # pbar = enumerate(testDataLoader, 0)
-        # if not args.print_pred:
         pbar = tqdm(enumerate(testDataLoader, 0), total=len(testDataLoader), smoothing=0.9)
         for batch_id, (points, tgt, scale) in pbar:
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
@@ -156,6 +154,7 @@ def main():
             tgt *= scale
             prd *= scale
             err = (tgt - prd).abs().mean(dim=1)
+            # err = (tgt - prd).abs().max(dim=1).values
 
             tgt = tgt.cpu().detach().numpy().tolist()
             prd = prd.cpu().detach().numpy().tolist()
@@ -167,7 +166,7 @@ def main():
 
     if args.print_pred:
         results_df = pd.DataFrame({
-            "No.": foot_ids,
+            "Foot No.": foot_ids,
             "TARGET": targets,
             "PRED": preds,
             "MAERR": errors

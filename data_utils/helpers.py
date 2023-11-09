@@ -110,9 +110,9 @@ def read_point_cloud_text(points_file, stride=1, flip_axis=-1, use_normals=True)
     points = np.loadtxt(points_file, delimiter=",")[::stride, :cutoff].copy()
     # transformation
     if flip_axis > -1:
-        points[:, flip_axis] = -points[:, flip_axis]
+        points[:, flip_axis] *= -1
         if use_normals:
-            points[:, flip_axis + 3] = -points[:, flip_axis + 3]
+            points[:, flip_axis + 3] *= -1
     return points
 
 
