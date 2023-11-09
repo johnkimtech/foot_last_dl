@@ -5,9 +5,11 @@ import logging
 import argparse
 import importlib
 import numpy as np
+import pandas as pd
 import torch.nn as nn
 from tqdm import tqdm
 from pathlib import Path
+from tabulate import tabulate
 from torch.utils.data import DataLoader
 from data_utils.FootDataset import FootDataset
 from data_utils.helpers import seed_everything_deterministic
@@ -136,42 +138,45 @@ def main():
     len_test = len(test_dataset)
     i = 0
     foot_ids = test_dataset.get_foot_ids()
+    targets = []
+    preds = []
+    errors = []
     tic = time.perf_counter()
     with torch.no_grad():
-        pbar = enumerate(testDataLoader, 0)
-        if not args.print_pred:
-            pbar = tqdm(pbar, total=len(testDataLoader), smoothing=0.9)
-        for batch_id, (points, target, scale) in pbar:
+        # pbar = enumerate(testDataLoader, 0)
+        # if not args.print_pred:
+        pbar = tqdm(enumerate(testDataLoader, 0), total=len(testDataLoader), smoothing=0.9)
+        for batch_id, (points, tgt, scale) in pbar:
             points = torch.tensor(points, dtype=torch.float32, device=args.device)
-            target = torch.tensor(target, dtype=torch.float32, device=args.device)
-            target = target[:, : checkpoint["out_features"]]
-            scale = scale.numpy().reshape(scale.shape[0], 1)
+            tgt = torch.tensor(tgt, dtype=torch.float32, device=args.device)
+            tgt = tgt[:, : checkpoint["out_features"]]
+            scale = scale.view(scale.shape[0], 1).to(args.device)
 
-            pred = regressor(points)
-            mse, mae = criterion(pred, target, include_mae=True)
-            r_mse, r_mae = criterion(
-                pred.cpu() * scale, target.cpu() * scale, include_mae=True
-            )
-            target = target.cpu().detach().numpy()
-            pred = pred.cpu().detach().numpy()
+            prd = regressor(points)
+            err = (scale*(tgt - prd)).abs().mean(dim=1)
 
-            if args.print_pred:
-                for t, p in zip(target * scale, pred * scale):
-                    fid = foot_ids[i]
-                    print(f"{fid}:\t\t{t} vs {p}")
-                    i += 1
+            tgt = tgt.cpu().detach().numpy().tolist()
+            prd = prd.cpu().detach().numpy().tolist()
+            err = err.cpu().detach().numpy().tolist()
 
-            batch_size = points.shape[0]
-            avg_mse += mse * batch_size / len_test
-            avg_mae += mae * batch_size / len_test
-            real_mse += r_mse * batch_size / len_test
-            real_mae += r_mae * batch_size / len_test
+            targets += np.round(tgt, decimals=2).tolist()
+            preds += np.round(prd, decimals=2).tolist()
+            errors += np.round(err, decimals=2).tolist()
+
+    if args.print_pred:
+        results_df = pd.DataFrame({
+            "No.": foot_ids,
+            "TARGET": targets,
+            "PRED": preds,
+            "MAERR": errors
+        })
+        print(tabulate(results_df, headers="keys", tablefmt="simple_grid", showindex=False, floatfmt=".2f"))
+
+
+    mean_error = np.mean(errors)
 
     print(
-        f"NORM: Mean Squared Error: {avg_mse.item():.4f}, Mean Absolute Error: {avg_mae.item():.4f}"
-    )
-    print(
-        f"REAL: Mean Squared Error: {real_mse.item():.2f}, Mean Absolute Error: {real_mae.item():.2f}"
+        f"Mean Absolute Error: {mean_error.item():.2f} (mm)"
     )
     toc = time.perf_counter()
     total_time = toc - tic
