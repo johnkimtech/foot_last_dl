@@ -42,7 +42,7 @@ class FootDataset(Dataset):
             self.df = pd.read_csv(infer_data_csv)
 
     def get_foot_ids(self) -> list[str]:
-        return self.df['No.'].tolist()
+        return (self.df['No.'] + "_"  + self.df['Foot']).tolist()
 
     def __len__(self):
         return len(self.df)
@@ -61,14 +61,6 @@ class FootDataset(Dataset):
                 use_normals=self.use_normals,
             )
         elif pc_ext.lower() == ".stl":
-            # Only use STL in inference / testing, not in TRAINING
-            # points = stl_to_xyz_with_normals_vectorized(
-            #     pc_path,
-            #     stride=10,
-            #     flip_axis=1 if foot["Foot"] == "R" else -1,
-            #     with_normals=self.use_normals,
-            #     permutate=True,
-            # )
             points = mesh_to_pointcloud(pc_path, max_points=self.npoints)
         else:
             raise (f"Unsupported data file extension: {pc_ext}")

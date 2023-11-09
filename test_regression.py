@@ -172,6 +172,7 @@ def main():
             "PRED": preds,
             "MAERR": errors
         })
+        results_df.sort_values(by='MAERR', inplace=True, ascending=True)
         print(tabulate(results_df, headers="keys", tablefmt="simple_grid", showindex=False, floatfmt=".2f"))
 
 
