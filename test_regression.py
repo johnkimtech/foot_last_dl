@@ -153,7 +153,9 @@ def main():
             scale = scale.view(scale.shape[0], 1).to(args.device)
 
             prd = regressor(points)
-            err = (scale*(tgt - prd)).abs().mean(dim=1)
+            tgt *= scale
+            prd *= scale
+            err = (tgt - prd).abs().mean(dim=1)
 
             tgt = tgt.cpu().detach().numpy().tolist()
             prd = prd.cpu().detach().numpy().tolist()
