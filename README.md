@@ -38,7 +38,7 @@ python app_f3d_l5.py --device cuda
 ### Run as Training
 **Requirements:** Make sure you have two folders named **data** (which stores that training / testing data) and folder **log** to store training checkpoints, history, and logs.
 ```console
-python train_regression.py --model pointnet2_regression_attn --exp_name attn_nov7 --dataset_dir data/3D_Oct30/new_prep --num_points 2048 --n_epochs 4000 --finetune --batch_size 16 --lr 1e-4
+python train_regression.py --model pointnet2_regression_attn --exp_name attn_nov9 --dataset_dir data/3D_Oct30/new_prep --num_points 2048 --n_epochs 4000 --finetune --batch_size 16 --lr 1e-4
 ```
 <details>
   <summary>Explanation</summary>
@@ -61,7 +61,7 @@ In summary, the Docker command is running a container based on the footlastdl im
 ### Run as Testing
 **Requirements:** Same as training
 ```console
-python test_regression.py --exp_name attn_nov7 --dataset_dir data/3D_Oct30/new_prep --batch_size 4 --device cuda
+python test_regression.py --exp_name attn_nov9 --dataset_dir data/3D_Oct30/new_prep --batch_size 4 --device cuda
 ```
 ### Run as Inference (without ground truths)
 **Requirements:** Same as testing

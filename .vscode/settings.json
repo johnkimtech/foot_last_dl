@@ -1,6 +1,6 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "mikoz.black-py"
+        "editor.defaultFormatter": "ms-python.autopep8"
     },
     "python.formatting.provider": "none"
 }

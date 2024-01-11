@@ -15,7 +15,6 @@ from data_utils.FootDataset import FootDataset
 from data_utils.helpers import seed_everything_deterministic
 
 
-
 np.set_printoptions(precision=1, suppress=True)
 
 # If using GPU
@@ -25,15 +24,17 @@ torch.backends.cudnn.benchmark = False
 
 # Parse command line arguments
 def parse_args():
-    parser = argparse.ArgumentParser(description="Your program description here.")
+    parser = argparse.ArgumentParser(
+        description="Your program description here.")
 
     # Define command line arguments
-    parser.add_argument("--dataset_dir", type=str, default="data/3D_All_Foot/oct12")
+    parser.add_argument("--dataset_dir", type=str,
+                        default="data/3D_All_Foot/oct12")
     parser.add_argument("--exp_name", type=str, required=True)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--device", type=str, default="cpu")
-    
+
     parser.add_argument(
         "--print_config",
         action="store_true",
@@ -41,7 +42,7 @@ def parse_args():
         help="print model configs including architecture and hyperparams",
     )
     parser.add_argument(
-        "--print_pred",
+        "--print_pred",e
         action="store_true",
         default=False,
         help="print predictions",
@@ -77,7 +78,8 @@ def main():
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    file_handler = logging.FileHandler("%s/%s_test.txt" % (str(LOG_DIR), args.exp_name))
+    file_handler = logging.FileHandler(
+        "%s/%s_test.txt" % (str(LOG_DIR), args.exp_name))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -132,20 +134,18 @@ def main():
     # Move model to the specified device
     regressor = regressor.to(args.device).eval()
 
-    avg_mse, avg_mae = 0.0, 0.0
-    real_mse, real_mae = 0.0, 0.0
     # Training loop
-    len_test = len(test_dataset)
-    i = 0
     foot_ids = test_dataset.get_foot_ids()
     targets = []
     preds = []
     errors = []
     tic = time.perf_counter()
     with torch.no_grad():
-        pbar = tqdm(enumerate(testDataLoader, 0), total=len(testDataLoader), smoothing=0.9)
+        pbar = tqdm(enumerate(testDataLoader, 0),
+                    total=len(testDataLoader), smoothing=0.9)
         for batch_id, (points, tgt, scale) in pbar:
-            points = torch.tensor(points, dtype=torch.float32, device=args.device)
+            points = torch.tensor(
+                points, dtype=torch.float32, device=args.device)
             tgt = torch.tensor(tgt, dtype=torch.float32, device=args.device)
             tgt = tgt[:, : checkpoint["out_features"]]
             scale = scale.view(scale.shape[0], 1).to(args.device)
@@ -172,8 +172,8 @@ def main():
             "MAERR": errors
         })
         results_df.sort_values(by='MAERR', inplace=True, ascending=True)
-        print(tabulate(results_df, headers="keys", tablefmt="simple_grid", showindex=False, floatfmt=".2f"))
-
+        print(tabulate(results_df, headers="keys",
+              tablefmt="simple_grid", showindex=False, floatfmt=".2f"))
 
     mean_error = np.mean(errors)
 
